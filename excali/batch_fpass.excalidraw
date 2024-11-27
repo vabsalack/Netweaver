@@ -3849,7 +3849,7 @@
       "containerId": "a9WS8h_kw2yBaOXXmWZ-H",
       "originalText": "x11       x12     x13",
       "lineHeight": 1.25,
-      "baseline": 9
+      "baseline": 10
     },
     {
       "type": "rectangle",
@@ -3914,7 +3914,7 @@
       "containerId": null,
       "originalText": "x21       x22     x23",
       "lineHeight": 1.25,
-      "baseline": 9
+      "baseline": 10
     },
     {
       "type": "line",
@@ -7236,7 +7236,7 @@
       "containerId": null,
       "originalText": "number of rows is number of sample in batch",
       "lineHeight": 1.25,
-      "baseline": 18
+      "baseline": 17
     },
     {
       "type": "text",
@@ -7272,7 +7272,7 @@
       "containerId": null,
       "originalText": "number of columns is number of neurons in layer",
       "lineHeight": 1.25,
-      "baseline": 18
+      "baseline": 17
     },
     {
       "type": "rectangle",
@@ -7337,7 +7337,7 @@
       "containerId": null,
       "originalText": "how batch matrix transforms in forward pass",
       "lineHeight": 1.25,
-      "baseline": 18
+      "baseline": 17
     }
   ],
   "appState": {
