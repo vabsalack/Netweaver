@@ -155,11 +155,12 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
 
 class Optimizer_SGD:
     # learning rate of 1. is default for this optimizer
-    def __init__(self, learning_rate=1., decay=0.):
+    def __init__(self, learning_rate=1., decay=0., momentum=0.):
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
         self.iterations = 0
+        self.momentum = momentum
 
     # call once before any parameter updates
     def pre_update_params(self):
@@ -169,13 +170,34 @@ class Optimizer_SGD:
 
     # update parameters
     def update_params(self, Layer):
-        Layer.weights += -self.learning_rate * Layer.dweights
-        Layer.biases += -self.learning_rate * Layer.dbiases
+
+        # If we use momentum
+        if self.momentum:
+            if not hasattr(Layer, "weight_momentums"):
+                Layer.weight_momentums = np.zeros_like(Layer.weights)
+                Layer.bias_momentums = np.zeros_like(Layer.biases)
+
+            # Build weight updates with momentum - take previous
+            # updates multiplied by retain factor and update with
+            # current gradients
+            weight_updates = self.momentum * Layer.weight_momentums - self.current_learning_rate * Layer.dweights
+            Layer.weight_momentums = weight_updates
+            # Build bias updates
+            bias_updates = self.momentum * Layer.bias_momentums - self.current_learning_rate * Layer.dbiases
+            Layer.bias_momentums = bias_updates
+            # Vanilla SGD updates (as before momentum update)
+        else:
+            weight_updates = -self.current_learning_rate * Layer.dweights
+            bias_updates = -self.current_learning_rate * Layer.dbiases
+
+                    
+        Layer.weights += weight_updates
+        Layer.biases += bias_updates
 
     # call once after any parameter updates
     def post_update_params(self):
         self.iterations += 1
-        
+
 
 
            
