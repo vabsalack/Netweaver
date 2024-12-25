@@ -234,6 +234,46 @@ class Optimizer_Adagrad:
     def post_update_params(self):
         self.iterations += 1
 
+class Optimizer_RMSprop:
+    # learning rate of 0.001 is default for this optimizer
+    # epsilon for numerical stability
+    def __init__(self, learning_rate=0.001, decay=0., epsilon=1e-7, beta=0.9):
+        self.learning_rate = learning_rate
+        self.current_learning_rate = learning_rate
+        self.decay = decay
+        self.iterations = 0
+        self.epsilon = epsilon
+        self.beta = beta
+
+    # call once before any parameter updates
+    def pre_update_params(self):
+        if self.decay:
+            # adding 1 ensure value < 0
+            self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
+
+    # update parameters
+    def update_params(self, Layer):
+
+        if not hasattr(Layer, "weight_cache"):
+            Layer.weight_cache = np.zeros_like(Layer.weights)
+            Layer.bias_cache = np.zeros_like(Layer.biases)
+        
+        # update cache with squared current gradients
+        # exponentially discounts past gradients
+        Layer.weight_cache = self.beta * Layer.weight_cache + (1 - self.beta) * Layer.dweights**2
+        Layer.bias_cache += self.beta * Layer.bias_cache + (1- self.beta) * Layer.dbiases**2
+
+        # vanilla + normalization with square rooted cache
+        Layer.weights += -self.current_learning_rate * Layer.dweights / (np.sqrt(Layer.weight_cache) + self.epsilon)        
+        Layer.biases += -self.current_learning_rate * Layer.dbiases / (np.sqrt(Layer.bias_cache) + self.epsilon)        
+
+
+    # call once after any parameter updates
+    def post_update_params(self):
+        self.iterations += 1
+
+
+
 
 
            
