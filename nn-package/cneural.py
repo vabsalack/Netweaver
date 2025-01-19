@@ -134,6 +134,18 @@ class Activation_Sigmoid:
     def backward(self, dvalues):
         self.dinputs = dvalues * (1 - self.output) * self.output
 
+# linear activation
+class Activation_Linear:
+    # forward pass
+    def forward(self, inputs):
+        # just remember values
+        self.inputs = inputs
+        self.output = inputs
+
+    # backward pass
+    def backward(self, dvalues):
+        self.dinputs = dvalues.copy()
+
 # Common loss class
 class Loss:
     # Regularization loss calculation
@@ -253,6 +265,40 @@ class Loss_BinaryCrossentropy(Loss):
         self.dinputs = -(y_true / clipped_dvalues - (1 - y_true)/(1 - clipped_dvalues)) / outputs
         # normalize gradient
         self.dinputs /= samples
+
+# mean squared error loss
+class Loss_MeanSquaredError(Loss):
+    # forward pass
+    def forward(self, y_pred, y_true):
+        sample_losses = np.mean((y_true - y_pred)**2, axis=-1)
+        return sample_losses
+    # backward pass
+    def backward(self, dvalues, y_true):
+        # number of samples
+        samples = len(dvalues)
+        # number of outputs in every sample
+        outputs = len(dvalues[0])
+
+        # gradients on values
+        self.dinputs = -2 * (y_true - dvalues) / outputs
+        # normalize gradient
+        self.dinputs = self.dinputs / samples
+
+# mean absolute error loss
+class Loss_MeanAbsoluteError(Loss):
+    #forward pass
+    def forward(self, y_pred, y_true):
+        sample_losses = np.mean(np.abs(y_true - y_pred), axis=-1)
+        return sample_losses
+    # backward pass
+    def backward(self, dvalues, y_true):
+        samples = len(dvalues)
+        # nubmer of outputs in every sample
+        outputs = len(dvalues[0])
+
+        self.dinputs = np.sign(y_true - dvalues) / outputs
+        # normalize gradient
+        self.dinputs = self.dinputs / samples
 
 class Optimizer_SGD:
     # learning rate of 1. is default for this optimizer
