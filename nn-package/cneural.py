@@ -123,6 +123,16 @@ class Activation_Softmax:
             # and add it to the array of sample gradients
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
+# sigmoid activation
+class Activation_Sigmoid:
+    # Forward pass
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = 1 / (1 + np.exp(-inputs))
+    
+    #backward pass
+    def backward(self, dvalues):
+        self.dinputs = dvalues * (1 - self.output) * self.output
 
 # Common loss class
 class Loss:
@@ -221,6 +231,28 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
         # Normalize gradient
         self.dinputs = self.dinputs / samples
 
+class Loss_BinaryCrossentropy(Loss):
+
+    def forward(self, y_pred, y_true):
+        # np.log(1e-323) = -inf
+        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
+        # calculate sample-wise loss
+        sample_losses = -(y_true * np.log(y_pred_clipped) + (1 -y_true) * np.log(1 - y_pred_clipped))
+        sample_losses = np.mean(sample_losses, axis=-1)
+
+        return sample_losses
+    # backward pass
+    def backward(self, dvalues, y_true):
+        # here dvalues are outputs from sigmoid
+        samples = len(dvalues)
+        # number of output in every sample
+        outputs = len(dvalues[0])
+
+        clipped_dvalues = np.clip(dvalues, 1e-7, 1 - 1e-7)
+
+        self.dinputs = -(y_true / clipped_dvalues - (1 - y_true)/(1 - clipped_dvalues)) / outputs
+        # normalize gradient
+        self.dinputs /= samples
 
 class Optimizer_SGD:
     # learning rate of 1. is default for this optimizer
