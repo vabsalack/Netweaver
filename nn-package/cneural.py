@@ -1,5 +1,12 @@
 import numpy as np
 
+
+
+class Layer_Input:
+
+    def forward(self, inputs):
+        self.output = inputs
+
 # Dense layer
 class Layer_Dense:
 
@@ -22,7 +29,7 @@ class Layer_Dense:
         self.bias_regularizer_L2 = bias_regularizer_L2
 
     # Forward pass
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         self.inputs = inputs
         # Calculate output values from inputs, weights and biases
         # In output matrix, rows constitues each sample and column constitues each neurons in a layer.
@@ -59,12 +66,16 @@ class Layer_Dense:
 
 # dropout
 class Layer_Dropout:
+
     def __init__(self, rate):
         #invert it here rate is q (p = 1 - q)
         self.rate = 1 - rate
     # forward pass
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         self.inputs = inputs
+        if not training:
+            self.output = inputs.copy()
+            return
         # save scaled mask
         self.binary_mask = np.random.binomial(1, self.rate, size=self.inputs.shape) / self.rate
         # apply mask to output values
@@ -79,7 +90,7 @@ class Layer_Dropout:
 class Activation_ReLU:
 
     # Forward pass
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         self.inputs = inputs
         # Calculate output values from inputs
         self.output = np.maximum(0, inputs)
@@ -92,12 +103,15 @@ class Activation_ReLU:
         # Zero gradient where input values were negative
         self.dinputs[self.inputs <= 0] = 0
 
+    def predictions(self, outputs):
+        return outputs
+
 
 # Softmax activation
 class Activation_Softmax:
 
     # Forward pass
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         self.inputs = inputs
         # Get unnormalized probabilities
         # exponentiation graph is rapid, avoid overflow by making maximum to zero. get the idea
@@ -107,6 +121,12 @@ class Activation_Softmax:
         self.output = probabilities
 
         # Backward pass
+        # Backward pass
+        # Backward pass
+
+    # Backward pass
+
+    # Backward pass
         # Backward pass
 
     # Backward pass
@@ -123,10 +143,13 @@ class Activation_Softmax:
             # and add it to the array of sample gradients
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
+    def predictions(self, outputs):
+        return np.argmax(outputs, axis=1)
+
 # sigmoid activation
 class Activation_Sigmoid:
     # Forward pass
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         self.inputs = inputs
         self.output = 1 / (1 + np.exp(-inputs))
     
@@ -134,10 +157,13 @@ class Activation_Sigmoid:
     def backward(self, dvalues):
         self.dinputs = dvalues * (1 - self.output) * self.output
 
+    def predictions(self, outputs):
+        return (outputs > 0.5) * 1
+
 # linear activation
 class Activation_Linear:
     # forward pass
-    def forward(self, inputs):
+    def forward(self, inputs, training):
         # just remember values
         self.inputs = inputs
         self.output = inputs
@@ -146,35 +172,52 @@ class Activation_Linear:
     def backward(self, dvalues):
         self.dinputs = dvalues.copy()
 
+    def predictions(self, outputs):
+        return outputs
+
 # Common loss class
 class Loss:
+
+    # remember trainable layers
+    def remember_trainable_layers(self, trainable_layers):
+        self.trainable_layers = trainable_layers
+
     # Regularization loss calculation
-    def regularization_loss(self,layer):
+    def regularization_loss(self):
         
         # 0 by default
         regularization_loss = 0
 
-        # L1 and L2 penalties for weights
-        if layer.weight_regularizer_L1 > 0:
-            regularization_loss += layer.weight_regularizer_L1 * np.sum(np.abs(layer.weights))
-        if layer.weight_regularizer_L2 > 0:
-            regularization_loss += layer.weight_regularizer_L2 * np.sum(layer.weights * layer.weights)
-        # L1 and L2 penalties for biases
-        if layer.bias_regularizer_L1 > 0:
-            regularization_loss += layer.bias_regularizer_L1 * np.sum(np.abs(layer.biases))
-        if layer.bias_regularizer_L2 > 0:
-            regularization_loss += layer.bias_regularizer_L2 * np.sum(layer.biases * layer.biases)
+        for layer in self.trainable_layers:
+
+            # L1 and L2 penalties for weights
+            if layer.weight_regularizer_L1 > 0:
+                regularization_loss += layer.weight_regularizer_L1 * np.sum(np.abs(layer.weights))
+
+            if layer.weight_regularizer_L2 > 0:
+                regularization_loss += layer.weight_regularizer_L2 * np.sum(layer.weights * layer.weights)
+
+
+            # L1 and L2 penalties for biases
+            if layer.bias_regularizer_L1 > 0:
+                regularization_loss += layer.bias_regularizer_L1 * np.sum(np.abs(layer.biases))
+
+            if layer.bias_regularizer_L2 > 0:
+                regularization_loss += layer.bias_regularizer_L2 * np.sum(layer.biases * layer.biases)
 
         return regularization_loss
 
     # Calculates the data and regularization losses
-    def calculate(self, output, y):
+    def calculate(self, output, y, *, include_regularization=False):
         # sample losses
         sample_losses = self.forward(output, y)
         # mean loss
         data_loss = np.mean(sample_losses)
         
-        return data_loss
+        if not include_regularization:
+            return data_loss
+
+        return data_loss, self.regularization_loss()
     
 # Cross-entropy loss
 class Loss_CategoricalCrossentropy(Loss):
