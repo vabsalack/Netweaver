@@ -1,222 +1,335 @@
 import numpy as np
+from typing import List, Dict, Optional, Tuple, Callable, TypeVar, Union
+from numpy.typing import NDArray, DTypeLike, ArrayLike
 
-
+"""
+what it is?
+where we can improvize?
+why it is used?
+how it works?
+"""
 
 class Layer_Input:
+    """
+    Layer_Input class represents the input layer of the neural network.
+    """
 
-    def forward(self, inputs):
+    def forward(self, inputs: NDArray) -> None:
+        """
+        Performs a forward pass of the input layer.
+
+        Parameters:
+        inputs (NDArray): Input data.
+        """
         self.output = inputs
 
-# Dense layer
-class Layer_Dense:
 
-    # Layer initialization
-    def __init__(self, n_inputs, n_neurons,
-                 weight_regularizer_L1=0, weight_regularizer_L2=0,
-                 bias_regularizer_L1=0, bias_regularizer_L2=0):
-        # the weight's initialization significantly impacts convergence
-        # (T) he initialization. variance scaled by number of input connections. σ2 = 2 / n_in
-        # below weights matrix initialization, notice dim is ninputs x nneurons, make easier for mat mul. 
+class Layer_Dense:
+    """
+    what it is?
+        * Dense of neurons in a layer. 
+    where we can improvize?
+        * weights initialization is one of crucial part in model convergence.
+        * experiment with other initialization method such as he, xavier, etc.
+    why it is used?
+        * For creating a layer of neurons in a neural network.
+    how it works?
+        * init
+        * forward method
+        * backward method
+    """
+
+    def __init__(self, n_inputs: int, 
+                 n_neurons: int,
+                 weight_regularizer_L1: Union[float, int] = 0,
+                 weight_regularizer_L2: Union[float, int] = 0, 
+                 bias_regularizer_L1: Union[float, int] = 0,
+                 bias_regularizer_L2: Union[float, int] = 0) -> None:
+        """
+        what it does?
+            * Initialize weights and biases
+            * sets regularization strength of L1 and L2
+        """
         self.weights = 0.01 * np.random.randn(n_inputs, n_neurons) 
         self.biases = np.zeros((1, n_neurons))
-
-        # set regularization strength
-        # weight regu..
+        # L1 strength
         self.weight_regularizer_L1 = weight_regularizer_L1
-        self.weight_regularizer_L2 = weight_regularizer_L2
-        # bias regu..
         self.bias_regularizer_L1 = bias_regularizer_L1
+        # L2 strength
+        self.weight_regularizer_L2 = weight_regularizer_L2
         self.bias_regularizer_L2 = bias_regularizer_L2
 
-    # Forward pass
-    def forward(self, inputs, training):
+    def forward(self, inputs: NDArray) -> None:
         self.inputs = inputs
-        # Calculate output values from inputs, weights and biases
-        # In output matrix, rows constitues each sample and column constitues each neurons in a layer.
         self.output = np.dot(inputs, self.weights) + self.biases
         
-    # Backward pass
-    def backward(self, dvalues):
-        # Gradients on parameters
-        # dvalues are backpropogated gradient from next layer
+    def backward(self, dvalues: NDArray) -> None:
+        """
+        what it does?
+            * computes gradient of weights, biases and inputs
+            * applies regularization on weights and biases gradients
+        """
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
-
-        # Gradients on regularization
-        # L1 on weights
+        self.dinputs = np.dot(dvalues, self.weights.T)
+        # apply regularization
+        # apply L1
         if self.weight_regularizer_L1 > 0:
             dL1 = np.ones_like(self.weights)
             dL1[self.weights < 0] = -1
             self.dweights += self.weight_regularizer_L1 * dL1
-        # L2 on weights
-        if self.weight_regularizer_L2 > 0:
-            self.dweights += 2 * self.weight_regularizer_L2 * self.weights
-        
-        # L1 on biases
         if self.bias_regularizer_L1 > 0:
             dL1 = np.ones_like(self.biases)
             dL1[self.biases < 0] = -1
             self.dbiases += self.bias_regularizer_L1 * dL1
-        # L2 on biases
+        # apply L2
+        if self.weight_regularizer_L2 > 0:
+            self.dweights += 2 * self.weight_regularizer_L2 * self.weights
         if self.bias_regularizer_L2 > 0:
             self.dbiases += 2 * self.bias_regularizer_L2 * self.biases
 
-        # Gradient on values
-        self.dinputs = np.dot(dvalues, self.weights.T)
-
-# dropout
+        
 class Layer_Dropout:
+    """
+    what it is?
+        * Dropout is a regularization technique where randomly selected neurons are ignored during training.
+    where we can improvize?
+        * dropout rate is one of the hyperparameter, experiment with different values.
+    why it is used?
+        * To prevent overfitting.
+        * To improve generalization.
+        * To make model robust.
+        * To make model less sensitive to the specific weights of neurons.
+    how it works?
+        * init
+        * forward method
+        * backward method
+        * Randomly sets some of the activations to zero during training by sampling from a binomial distribution.
+        * This creates a dropout mask that deactivates certain neurons to prevent overfitting.
+    """
 
-    def __init__(self, rate):
-        #invert it here rate is q (p = 1 - q)
+    def __init__(self, rate: Union[float, int]) -> None:
+        """
+        what it does?
+            * sets dropout rate
+            * argument rate is the percentage of neurons to be deactivated.
+            * self.rate = 1 - rate, is the percentage of neurons to be activated because numpy binomial method expects probability of success.
+        """
         self.rate = 1 - rate
-    # forward pass
-    def forward(self, inputs, training):
+
+    def forward(self, 
+                inputs: NDArray, 
+                training: bool) -> None:
+        """
+        what it does?
+            * creates binary mask only on training.
+            * passes the input as it is during inference.
+        """
         self.inputs = inputs
         if not training:
             self.output = inputs.copy()
             return
-        # save scaled mask
         self.binary_mask = np.random.binomial(1, self.rate, size=self.inputs.shape) / self.rate
-        # apply mask to output values
         self.output = self.inputs * self.binary_mask
-    # backward pass
-    def backward(self, dvalues):
-        # gradient on values
+
+    def backward(self, dvalues: NDArray) -> None:
         self.dinputs = dvalues * self.binary_mask
 
 
-# ReLU activation
 class Activation_ReLU:
+    """
+    what it is?
+        * ReLu activation function is used to introduce non-linearity in the neural network.
+    where we can improvize?
+        * leaky ReLu, Parametric ReLu, Exponential ReLu, etc.
+    why it is used?
+        * To learn non-linear patterns in the data.
+    how it works?
+        * forward method
+        * backward method
+        * predictions method
+        * Mathematically, ReLu(x) = max(0, x)
+    """
 
-    # Forward pass
-    def forward(self, inputs, training):
+    def forward(self, 
+                inputs: NDArray, 
+                training: bool) -> None:
         self.inputs = inputs
-        # Calculate output values from inputs
         self.output = np.maximum(0, inputs)
 
-    # Backward pass
-    def backward(self, dvalues):
-        # Since we need to modify original variable,
-        # let's make a copy of values first
+    def backward(self, dvalues: NDArray) -> None:
         self.dinputs = dvalues.copy()
-        # Zero gradient where input values were negative
         self.dinputs[self.inputs <= 0] = 0
 
-    def predictions(self, outputs):
+    def predictions(self, outputs: NDArray) -> NDArray:
         return outputs
 
 
-# Softmax activation
 class Activation_Softmax:
+    """
+    what it is?
+        * Softmax activation function is used to convert raw scores into probabilities.
+        * It is used in the output layer of a neural network for multi-class classification.
+        * It squashes the raw scores into a range of [0, 1] and normalizes them.
+    where we can improvize?
+        * Softmax is the best activation function for multi-class classification.
+    why it is used?
+        * To convert raw scores into probabilities.
+        * To make the model output interpretable.
+    how it works?
+        * forward method
+        * backward method
+        * predictions method
+        * Mathematically, softmax(x) = exp(x) / sum(exp(x))
+        * Exponentiation graph is rapid, avoid overflow by making maximum to zero. get the idea
+    """
 
-    # Forward pass
-    def forward(self, inputs, training):
+    def forward(self, 
+                inputs: NDArray, 
+                training: bool) -> None:
+        """
+        calculates softmax values of inputs and stores it in self.output
+        """
         self.inputs = inputs
-        # Get unnormalized probabilities
-        # exponentiation graph is rapid, avoid overflow by making maximum to zero. get the idea
         exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
-        # Normalize them for each sample
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
         self.output = probabilities
 
-        # Backward pass
-        # Backward pass
-        # Backward pass
-
-    # Backward pass
-
-    # Backward pass
-        # Backward pass
-
-    # Backward pass
-
-    def backward(self, dvalues):
-        # Create uninitialized array
+    def backward(self, dvalues: NDArray) -> None:
+        """
+        what it does?
+            * creates self.dinputs beforehand since numpy array's aren't dynamically resizable.
+            * calculates gradient of softmax values and stores it in self.dinputs
+            * softmax derivative is calculated using jacobian matrix
+            * jacobian matrix is a square matrix containing all first-order partial derivatives of a vector-valued function.
+            * refer math behind back propogation for intuitive understanding
+        """
         self.dinputs = np.empty_like(dvalues)
         for index, (single_output, single_dvalues) in enumerate(zip(self.output, dvalues)):
-            # Flatten output array
             single_output = single_output.reshape(-1, 1)
-            # Calculate Jacobian matrix of the output and
             jacobian_matrix = np.diagflat(single_output) - np.dot(single_output, single_output.T)
-            # Calculate sample-wise gradient
-            # and add it to the array of sample gradients
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
-    def predictions(self, outputs):
+    def predictions(self, outputs: NDArray) -> NDArray:
         return np.argmax(outputs, axis=1)
 
-# sigmoid activation
+
 class Activation_Sigmoid:
-    # Forward pass
-    def forward(self, inputs, training):
+    """
+    what it is?
+        * It is used in the output layer of a neural network for binary logistic regression
+        * sigmod function only takes one input and returns one output.
+    where we can improvize?
+    why it is used?
+        * To convert raw scores into probabilities.
+        * To make the model output interpretable
+    how it works?
+        * forward method
+        * backward method
+        * predictions method
+        * Mathematically, sigmoid(x) = 1 / (1 + exp(-x))
+    """
+
+    def forward(self, 
+                inputs: NDArray, 
+                training: NDArray) -> None:
         self.inputs = inputs
         self.output = 1 / (1 + np.exp(-inputs))
-    
-    #backward pass
-    def backward(self, dvalues):
+
+    def backward(self, dvalues: NDArray) -> None:
+        """
+        what it does? 
+            * The derivative of the sigmoid function is calculated as:
+            * sigmoid'(x) = sigmoid(x) * (1 - sigmoid(x))
+        """
         self.dinputs = dvalues * (1 - self.output) * self.output
 
-    def predictions(self, outputs):
+    def predictions(self, outputs: NDArray) -> NDArray:
+        """
+        what it does?
+            * product of arr: NDArray[bool_] and x: int is y: NDArray[int64]
+            * False values replaced by 0 and True values replaced by x
+            * array([False, True]) * -2 = array([0, -2])
+        """
         return (outputs > 0.5) * 1
 
-# linear activation
+
 class Activation_Linear:
-    # forward pass
-    def forward(self, inputs, training):
-        # just remember values
+    """
+    what it is?
+        * Linear activation function is used to pass the input directly to the output without any modification.
+    where we can improvize?
+        * This is a simple activation function, not much to improve.
+    why it is used?
+        * It is used in the output layer for regression tasks where we need to predict continuous values.
+    how it works?
+        * forward method
+        * backward method
+        * predictions method
+        * It simply returns the input as the output.
+    """
+
+    def forward(self, 
+                inputs: NDArray, 
+                training: bool) -> None:
         self.inputs = inputs
         self.output = inputs
 
-    # backward pass
-    def backward(self, dvalues):
+    def backward(self, dvalues: NDArray) -> None:
         self.dinputs = dvalues.copy()
 
-    def predictions(self, outputs):
+    def predictions(self, outputs: NDArray) -> NDArray:
         return outputs
 
-# Common loss class
 class Loss:
+    """
+    what it is?
+        * Base class for loss functions.
+    where we can improvize?
+        * Implement additional loss functions as needed.
+    why it is used?
+        * To calculate the difference between the predicted output and the actual output.
+    how it works?
+        * remember_trainable_layers method sets self.trainable_layers property.
+        * regularization_loss method calculates the regularization loss using layers in self.trainable_layers.
+        * calculate method calculates the data loss using child class's forward method and regularization loss using regularization_loss method.
+        * It provides methods to calculate the loss and its gradient.
+    """
 
-    # remember trainable layers
-    def remember_trainable_layers(self, trainable_layers):
+    def remember_trainable_layers(self, trainable_layers: List[Union[Layer_Dense]]) -> None:
         self.trainable_layers = trainable_layers
 
-    # Regularization loss calculation
-    def regularization_loss(self):
-        
-        # 0 by default
-        regularization_loss = 0
-
+    def regularization_loss(self) -> float:
+        regularization_loss: float = .0
         for layer in self.trainable_layers:
-
-            # L1 and L2 penalties for weights
+            # L1 penalty
             if layer.weight_regularizer_L1 > 0:
                 regularization_loss += layer.weight_regularizer_L1 * np.sum(np.abs(layer.weights))
-
-            if layer.weight_regularizer_L2 > 0:
-                regularization_loss += layer.weight_regularizer_L2 * np.sum(layer.weights * layer.weights)
-
-
-            # L1 and L2 penalties for biases
             if layer.bias_regularizer_L1 > 0:
                 regularization_loss += layer.bias_regularizer_L1 * np.sum(np.abs(layer.biases))
-
+            # L2 penalty
+            if layer.weight_regularizer_L2 > 0:
+                regularization_loss += layer.weight_regularizer_L2 * np.sum(layer.weights * layer.weights)
             if layer.bias_regularizer_L2 > 0:
                 regularization_loss += layer.bias_regularizer_L2 * np.sum(layer.biases * layer.biases)
-
         return regularization_loss
 
-    # Calculates the data and regularization losses
-    def calculate(self, output, y, *, include_regularization=False):
-        # sample losses
+    def calculate(self, 
+                  output: NDArray, 
+                  y: NDArray, 
+                  *, 
+                  include_regularization: bool=False) -> Union[float, Tuple[float, float]]:
+        """
+        what it does?
+            * calculates data and regularization loss
+            * data loss is the mean of sample losses
+            * regularization loss is the sum of L1 and L2 penalties
+            * returns only data loss by default
+        """
         sample_losses = self.forward(output, y)
-        # mean loss
         data_loss = np.mean(sample_losses)
-        
         if not include_regularization:
             return data_loss
-
         return data_loss, self.regularization_loss()
     
 # Cross-entropy loss
