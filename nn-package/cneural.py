@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Dict, Optional, Tuple, Callable, TypeVar, Union
+from typing import List, Dict, Optional, Tuple, Callable, TypeVar, Union, Any
 from numpy.typing import NDArray, DTypeLike, ArrayLike
 
 """
@@ -332,74 +332,114 @@ class Loss:
             return data_loss
         return data_loss, self.regularization_loss()
     
-# Cross-entropy loss
+
 class Loss_CategoricalCrossentropy(Loss):
-    # Forward pass
-    def forward(self, y_pred, y_true):
-        # Number of samples in a batch
+    """
+    what it is?
+        * Categorical cross-entropy loss function is used in multi-class (3 and more) classification tasks.
+        * It's the negative-log-likelihood of likelihood functoin 
+        * It measures the difference between two probability distributions.
+    where we can improvize?
+        * Implement additional loss functions as needed.
+    why it is used?
+        * To  find the MLE (Maximum Likelihood Estimation) of the model.
+    how it works?
+        * forward method
+        * backward method
+        * formula: -sum(y_true * log(y_pred))
+    """
+
+    def forward(self,
+                y_pred: np.ndarray[np.ndarray[float]], 
+                y_true: np.ndarray[Union[int, np.ndarray[int]]]) -> NDArray:
+        """
+        what it does?
+            * clips the predicted values to prevent division by zero, log of zero is undefined and derivate of log(x) is 1/x precision overflows.
+            * clips both sides to not drag mean towards any value
+            * handles both one-hot encoded and sparse labels
+            * calculates the negative log likelihood of only the correct class probabilities. -( 0.log(x.x) + 1.log(x.x) + 0.log(x.x) + 0.log(x.x) ) 
+        """
         samples = len(y_pred)
-        # Clip data to prevent division by 0
-        # Clip both sides to not drag mean towards any value
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
-        # Probabilities for target values -
-        # only if categorical labels
         if len(y_true.shape) == 1:
             correct_confidences = y_pred_clipped[range(samples), y_true]
         elif len(y_true.shape) == 2:
             correct_confidences = np.sum(y_pred_clipped * y_true,axis=1)
-        # Losses
         negative_log_likelihoods = -np.log(correct_confidences)
         return negative_log_likelihoods
         
-    # Backward pass
-    def backward(self, dvalues, y_true):
-        # davalues are softmax outputs (predicted outputs)
-        # Number of samples
+
+    def backward(self, dvalues: np.ndarray[np.ndarray[float]], 
+                 y_true:  np.ndarray[Union[int, np.ndarray[int]]]) -> None:
+        """
+        what it does?
+            * Expects y_true to be one-hot encoded.
+            * calculates the gradient of loss functions with respect to the predicted values.
+            * normalizes the gradient by the number of samples.
+        """
         samples = len(dvalues)
-        # Number of labels in every sample
-        # We'll use the first sample to count them
         labels = len(dvalues[0])
-        # If labels are sparse, turn them into one-hot vector
         if len(y_true.shape) == 1:
             y_true = np.eye(labels)[y_true]
-        # Calculate gradient
+        
         self.dinputs = -y_true / dvalues
-        # Normalize gradient
         self.dinputs = self.dinputs / samples
 
-# Softmax classifier - combined Softmax activation
-# and cross-entropy loss for faster backward step
+
 class Activation_Softmax_Loss_CategoricalCrossentropy():
-    # Creates activation and loss function objects
-    def __init__(self):
+    """
+    what it is?
+        * Softmax classifier is a combination of softmax activation and categorical cross-entropy loss.
+        * It is used in multi-class classification tasks.
+        * refer the math behind softmax and cross-entropy loss gradients for intuitive understanding.
+    where we can improvize?
+        * Implement additional loss functions as needed.
+    why it is used?
+        * faster backward step
+    how it works?
+        * init
+        * forward method
+        * backward method
+        * gradients of loss functions with respect to the penultimate layer's outputs reduced to a single step.
+        * formula = predicted values - true values
+    """
+
+    def __init__(self) -> None:
         self.activation = Activation_Softmax()
         self.loss = Loss_CategoricalCrossentropy()
 
-    # Forward pass
-    def forward(self, inputs, y_true):
-        # Output layer's activation function
+    def forward(self, inputs: NDArray, y_true: NDArray) -> float:
+        """
+        what it does?
+            * calculates the softmax values of inputs
+            * return the loss value using the calculated softmax output and true labels
+        """
         self.activation.forward(inputs)
-        # Set the output
         self.output = self.activation.output
-        # Calculate and return loss value
         return self.loss.calculate(self.output, y_true)
     
-    # Backward pass
-    def backward(self, dvalues, y_true):
-        # Number of samples
+    def backward(self, dvalues: NDArray, y_true: NDArray) -> None:
+        """
+        what it does?
+            * expects y_true to be sparse labels
+            * copy the dvalues to self.dinputs
+            * calculates gradient and normalize them
+        """
         samples = len(dvalues)
-        # If labels are one-hot encoded,
-        # turn them into discrete values
         if len(y_true.shape) == 2:
             y_true = np.argmax(y_true, axis=1)
-        # Copy so we can safely modify
         self.dinputs = dvalues.copy()
-        # Calculate gradient, true lables are 1
         self.dinputs[range(samples), y_true] -= 1
-        # Normalize gradient
         self.dinputs = self.dinputs / samples
 
 class Loss_BinaryCrossentropy(Loss):
+    """
+    what it is?
+        * Binary cross-entropy loss function is used in binary classification tasks.
+    where we can improvize?
+    why it is used?
+    how it works?
+    """
 
     def forward(self, y_pred, y_true):
         # np.log(1e-323) = -inf
