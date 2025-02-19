@@ -9,19 +9,21 @@ why it is used?
 how it works?
 """
 
+Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
+
 class Layer_Input:
     """
     Layer_Input class represents the input layer of the neural network.
     """
 
-    def forward(self, inputs: NDArray) -> None:
+    def forward(self, inputs: ArrayLike) -> None: 
         """
         Performs a forward pass of the input layer.
 
         Parameters:
         inputs (NDArray): Input data.
         """
-        self.output = inputs
+        self.output = np.array(inputs, dtype=np.float64)
 
 
 class Layer_Dense:
@@ -59,11 +61,11 @@ class Layer_Dense:
         self.weight_regularizer_L2 = weight_regularizer_L2
         self.bias_regularizer_L2 = bias_regularizer_L2
 
-    def forward(self, inputs: NDArray) -> None:
+    def forward(self, inputs: Float64Array2D) -> None:
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
         
-    def backward(self, dvalues: NDArray) -> None:
+    def backward(self, dvalues: Float64Array2D) -> None:
         """
         what it does?
             * computes gradient of weights, biases and inputs
@@ -118,7 +120,7 @@ class Layer_Dropout:
         self.rate = 1 - rate
 
     def forward(self, 
-                inputs: NDArray, 
+                inputs: Float64Array2D, 
                 training: bool) -> None:
         """
         what it does?
@@ -132,7 +134,7 @@ class Layer_Dropout:
         self.binary_mask = np.random.binomial(1, self.rate, size=self.inputs.shape) / self.rate
         self.output = self.inputs * self.binary_mask
 
-    def backward(self, dvalues: NDArray) -> None:
+    def backward(self, dvalues: Float64Array2D) -> None:
         self.dinputs = dvalues * self.binary_mask
 
 
@@ -152,16 +154,16 @@ class Activation_ReLU:
     """
 
     def forward(self, 
-                inputs: NDArray, 
+                inputs: Float64Array2D, 
                 training: bool) -> None:
         self.inputs = inputs
         self.output = np.maximum(0, inputs)
 
-    def backward(self, dvalues: NDArray) -> None:
+    def backward(self, dvalues: Float64Array2D) -> None:
         self.dinputs = dvalues.copy()
         self.dinputs[self.inputs <= 0] = 0
 
-    def predictions(self, outputs: NDArray) -> NDArray:
+    def predictions(self, outputs: Float64Array2D) -> Float64Array2D:
         return outputs
 
 
@@ -185,7 +187,7 @@ class Activation_Softmax:
     """
 
     def forward(self, 
-                inputs: NDArray, 
+                inputs: Float64Array2D, 
                 training: bool) -> None:
         """
         calculates softmax values of inputs and stores it in self.output
@@ -195,7 +197,7 @@ class Activation_Softmax:
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
         self.output = probabilities
 
-    def backward(self, dvalues: NDArray) -> None:
+    def backward(self, dvalues: Float64Array2D) -> None:
         """
         what it does?
             * creates self.dinputs beforehand since numpy array's aren't dynamically resizable.
@@ -210,33 +212,43 @@ class Activation_Softmax:
             jacobian_matrix = np.diagflat(single_output) - np.dot(single_output, single_output.T)
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
-    def predictions(self, outputs: NDArray) -> NDArray:
+    def predictions(self, outputs: Float64Array2D) -> np.ndarray[Tuple[int], np.dtype[np.int64]]:
         return np.argmax(outputs, axis=1)
 
 
 class Activation_Sigmoid:
     """
     what it is?
-        * It is used in the output layer of a neural network for binary logistic regression
+        * use primarily in the multi-label classification problem.
+        * It is used in the output layer of a neural network for binary logistic regression models
         * sigmod function only takes one input and returns one output.
     where we can improvize?
+        * Implement additional activation functions with similar property as needed.
     why it is used?
-        * To convert raw scores into probabilities.
-        * To make the model output interpretable
+        * In multi label classificatoin problems, each output neurons represents seperate class on its own.
+        * Cat vs Dog, Cat or not Cat, Indoor or outdoor, etc.
+        * needs an activation function that can output a probability range of [0, 1].
+        * This function must be paired with respective loss function. one is binary cross-entropy loss.
     how it works?
         * forward method
         * backward method
         * predictions method
         * Mathematically, sigmoid(x) = 1 / (1 + exp(-x))
+        * squashes the raw scores into a range of [0, 1] and normalizes them.
     """
 
     def forward(self, 
-                inputs: NDArray, 
-                training: NDArray) -> None:
+                inputs: Float64Array2D, 
+                training: bool) -> None:
+        """
+        where we can improve?
+            * self.output range is [0, 1]. unsigned float value. set dtype of values in the array to save memory
+            * set dtype for self.outpout and to variables in respective loss function
+        """
         self.inputs = inputs
         self.output = 1 / (1 + np.exp(-inputs))
 
-    def backward(self, dvalues: NDArray) -> None:
+    def backward(self, dvalues: Float64Array2D) -> None:
         """
         what it does? 
             * The derivative of the sigmoid function is calculated as:
@@ -244,7 +256,7 @@ class Activation_Sigmoid:
         """
         self.dinputs = dvalues * (1 - self.output) * self.output
 
-    def predictions(self, outputs: NDArray) -> NDArray:
+    def predictions(self, outputs: Float64Array2D) -> np.ndarray[Tuple[int, int], np.dtype[np.int64]]:
         """
         what it does?
             * product of arr: NDArray[bool_] and x: int is y: NDArray[int64]
@@ -270,15 +282,15 @@ class Activation_Linear:
     """
 
     def forward(self, 
-                inputs: NDArray, 
+                inputs: Float64Array2D, 
                 training: bool) -> None:
         self.inputs = inputs
         self.output = inputs
 
-    def backward(self, dvalues: NDArray) -> None:
+    def backward(self, dvalues: Float64Array2D) -> None:
         self.dinputs = dvalues.copy()
 
-    def predictions(self, outputs: NDArray) -> NDArray:
+    def predictions(self, outputs: Float64Array2D) -> Float64Array2D:
         return outputs
 
 class Loss:
@@ -315,8 +327,8 @@ class Loss:
         return regularization_loss
 
     def calculate(self, 
-                  output: NDArray, 
-                  y: NDArray, 
+                  output: Float64Array2D, 
+                  y, # y type can be one-hot encoded or sparse lables
                   *, 
                   include_regularization: bool=False) -> Union[float, Tuple[float, float]]:
         """
@@ -350,8 +362,8 @@ class Loss_CategoricalCrossentropy(Loss):
     """
 
     def forward(self,
-                y_pred: np.ndarray[np.ndarray[float]], 
-                y_true: np.ndarray[Union[int, np.ndarray[int]]]) -> NDArray:
+                y_pred: Float64Array2D, 
+                y_true) -> np.ndarray[Tuple[int], np.dtype[np.float64]]:  # y_true type can be one-hot encoded or sparse lables
         """
         what it does?
             * clips the predicted values to prevent division by zero, log of zero is undefined and derivate of log(x) is 1/x precision overflows.
@@ -364,13 +376,13 @@ class Loss_CategoricalCrossentropy(Loss):
         if len(y_true.shape) == 1:
             correct_confidences = y_pred_clipped[range(samples), y_true]
         elif len(y_true.shape) == 2:
-            correct_confidences = np.sum(y_pred_clipped * y_true,axis=1)
+            correct_confidences = np.sum(y_pred_clipped * y_true, axis=1)
         negative_log_likelihoods = -np.log(correct_confidences)
         return negative_log_likelihoods
         
 
-    def backward(self, dvalues: np.ndarray[np.ndarray[float]], 
-                 y_true:  np.ndarray[Union[int, np.ndarray[int]]]) -> None:
+    def backward(self, dvalues: Float64Array2D, 
+                 y_true) -> None: 
         """
         what it does?
             * Expects y_true to be one-hot encoded.
@@ -386,7 +398,7 @@ class Loss_CategoricalCrossentropy(Loss):
         self.dinputs = self.dinputs / samples
 
 
-class Activation_Softmax_Loss_CategoricalCrossentropy():
+class Activation_Softmax_Loss_CategoricalCrossentropy:
     """
     what it is?
         * Softmax classifier is a combination of softmax activation and categorical cross-entropy loss.
@@ -408,7 +420,7 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
         self.activation = Activation_Softmax()
         self.loss = Loss_CategoricalCrossentropy()
 
-    def forward(self, inputs: NDArray, y_true: NDArray) -> float:
+    def forward(self, inputs: Float64Array2D, y_true) -> float:
         """
         what it does?
             * calculates the softmax values of inputs
@@ -418,7 +430,7 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
         self.output = self.activation.output
         return self.loss.calculate(self.output, y_true)
     
-    def backward(self, dvalues: NDArray, y_true: NDArray) -> None:
+    def backward(self, dvalues: Float64Array2D, y_true) -> None:
         """
         what it does?
             * expects y_true to be sparse labels
@@ -435,31 +447,47 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
 class Loss_BinaryCrossentropy(Loss):
     """
     what it is?
-        * Binary cross-entropy loss function is used in binary classification tasks.
+        * Binary cross-entropy loss function is used in binary regression models.
+        * used primarily in the multi-label classification problem.
     where we can improvize?
     why it is used?
+        * Unlike categorical cross-entropy, it measures negative-log-likelihood of each output neurons seperately and average them.
     how it works?
+        * forward
+        * backward
+        * formula: -sum(y_true * log(y_pred) + (1 - y_true) * log(1 - y_pred))
+        * Each sample loss is a vector of output neuron's losses and it's average used as the final loss for that sample.
     """
 
-    def forward(self, y_pred, y_true):
+    def forward(self, 
+                y_pred: Float64Array2D, 
+                y_true: np.ndarray[Tuple[int, int], np.dtype[np.int64]]) -> np.array[Tuple[int], np.dtype[np.float64]]:
+        """
+        what it does?
+            * clips the predicted values to prevent division by zero, log of zero is undefined and derivate of log(x) is 1/x precision overflows.
+            * clips both sides to not drag mean towards any value
+            * calculates negative log likelihood of each outputs of a sample and average them.
+        """
         # np.log(1e-323) = -inf
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
-        # calculate sample-wise loss
         sample_losses = -(y_true * np.log(y_pred_clipped) + (1 -y_true) * np.log(1 - y_pred_clipped))
         sample_losses = np.mean(sample_losses, axis=-1)
-
         return sample_losses
-    # backward pass
-    def backward(self, dvalues, y_true):
-        # here dvalues are outputs from sigmoid
+
+    def backward(self, 
+                 dvalues: Float64Array2D, 
+                 y_true: np.ndarray[Tuple[int, int], np.dtype[np.int64]]) -> None:
+        """
+        what it does?
+            * Final loss of a sample is average of each output neuron's loss.
+            * gradient of sub each neuron's loss is - ((y_true / y_pred) - (1 - y_true) / (1 - y_pred))
+            * partial derivative of final loss w.r.t output neuron's value is - ((y_true / y_pred) - (1 - y_true) / (1 - y_pred)) / outputs
+            * normalize the gradient by the number of samples in the batch.
+        """
         samples = len(dvalues)
-        # number of output in every sample
         outputs = len(dvalues[0])
-
         clipped_dvalues = np.clip(dvalues, 1e-7, 1 - 1e-7)
-
-        self.dinputs = -(y_true / clipped_dvalues - (1 - y_true)/(1 - clipped_dvalues)) / outputs
-        # normalize gradient
+        self.dinputs = -((y_true / clipped_dvalues) - (1 - y_true)/(1 - clipped_dvalues)) / outputs
         self.dinputs /= samples
 
 # mean squared error loss
