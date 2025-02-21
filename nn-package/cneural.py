@@ -490,119 +490,152 @@ class Loss_BinaryCrossentropy(Loss):
         self.dinputs = -((y_true / clipped_dvalues) - (1 - y_true)/(1 - clipped_dvalues)) / outputs
         self.dinputs /= samples
 
-# mean squared error loss
+
 class Loss_MeanSquaredError(Loss):
-    # forward pass
-    def forward(self, y_pred, y_true):
+    """
+    what it is?
+        * Mean squared error(MSE) L2 loss function is used in single or multiple output regression tasks.
+    where we can improvize?
+    why it is used?
+        * MSE(L2) most commonly used loss function for regression tasks over MAE(L1).
+    how it works?
+        * forward
+        * backward
+        * Assumption is that the error residuals are normally distributed.
+        * refer to it's likelihood function for intuitive understanding.
+    """
+
+    def forward(self, y_pred: Float64Array2D,
+                 y_true: Float64Array2D) -> np.array[Tuple[int], np.dtype[np.float64]]:
+        """
+        * loss formula: mean((y_true - y_pred)^2) applies to each sample in a batch.
+        """
         sample_losses = np.mean((y_true - y_pred)**2, axis=-1)
         return sample_losses
-    # backward pass
-    def backward(self, dvalues, y_true):
-        # number of samples
-        samples = len(dvalues)
-        # number of outputs in every sample
-        outputs = len(dvalues[0])
 
-        # gradients on values
+    def backward(self, dvalues: Float64Array2D, 
+                 y_true: Float64Array2D) -> None:
+        """
+        what it does?
+            * computes gradient of loss functions with respect to the predicted values.
+            * formula = -2 * (y_true - y_pred) / outputs is for one of predicted outputs in a sample.
+            * normalize the gradient by the number of samples in the batch.
+        """
+        samples = len(dvalues)
+        outputs = len(dvalues[0])
         self.dinputs = -2 * (y_true - dvalues) / outputs
-        # normalize gradient
         self.dinputs = self.dinputs / samples
 
-# mean absolute error loss
+
 class Loss_MeanAbsoluteError(Loss):
-    #forward pass
-    def forward(self, y_pred, y_true):
+    """
+    what it is?
+        * Mean absolute error(MAE) L1 loss function is used in single or multiple output regression tasks.
+    where we can improvize?
+    why it is used?
+        * MAE(L1) is less sensitive to outliers than MSE(L2).
+        * It is used in regression tasks where outliers are present.
+    how it works?
+        * forward
+        * backward
+        * Assumption is that the error residuals are Laplace distributed.
+    """
+
+    def forward(self, 
+                y_pred: Float64Array2D, 
+                y_true: Float64Array2D) -> np.array[Tuple[int], np.dtype[np.float64]]:
+        """
+        * loss formula: mean(abs(y_true - y_pred)) applies to each sample in a batch.
+        """
         sample_losses = np.mean(np.abs(y_true - y_pred), axis=-1)
         return sample_losses
-    # backward pass
-    def backward(self, dvalues, y_true):
-        samples = len(dvalues)
-        # nubmer of outputs in every sample
-        outputs = len(dvalues[0])
 
+    def backward(self, 
+                 dvalues: Float64Array2D,
+                y_true: Float64Array2D) -> None:
+        """
+        what it does?
+            * computes gradient of loss functions with respect to the predicted values.
+            * formula = sign(y_true - y_pred) / outputs is for one of predicted outputs in a sample.
+            * The derivative of an absolute value equals 1 if this value is greater than 0, or -1 if it’s less than 0. The derivative does not exist for a value of 0
+            * np.sign returns -1 for negative values, 0 for 0, and 1 for positive values.
+            * normalize the gradient by the number of samples in the batch.
+        """
+        samples = len(dvalues)
+        outputs = len(dvalues[0])
         self.dinputs = np.sign(y_true - dvalues) / outputs
-        # normalize gradient
         self.dinputs = self.dinputs / samples
 
 class Optimizer_SGD:
+    """
+    what it is?
+    where we can improvize?
+    why it is used?
+    how it works?
+    """
+    # decay, think about the 1/x graph values in x range [1, inf]. get the idea.
+    # exponential decay
     # learning rate of 1. is default for this optimizer
-    def __init__(self, learning_rate=1., decay=0., momentum=0.):
+    def __init__(self, 
+                 learning_rate: float = 1., 
+                 decay: float = 0., 
+                 momentum: float = 0.) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
         self.iterations = 0
         self.momentum = momentum
 
-    # call once before any parameter updates
     def pre_update_params(self):
         if self.decay:
-            # adding 1 ensure value decreases
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
-    # update parameters
-    def update_params(self, Layer):
-
-        # If we use momentum
+    def update_params(self, Layer: Layer_Dense) -> None:
         if self.momentum:
             if not hasattr(Layer, "weight_momentums"):
                 Layer.weight_momentums = np.zeros_like(Layer.weights)
                 Layer.bias_momentums = np.zeros_like(Layer.biases)
-
-            # Build weight updates with momentum - take previous
-            # updates multiplied by retain factor and update with
-            # current gradients
             weight_updates = self.momentum * Layer.weight_momentums - self.current_learning_rate * Layer.dweights
             Layer.weight_momentums = weight_updates
-            # Build bias updates
             bias_updates = self.momentum * Layer.bias_momentums - self.current_learning_rate * Layer.dbiases
             Layer.bias_momentums = bias_updates
-            # Vanilla SGD updates (as before momentum update)
-        else:
+        else: # Vanilla SGD updates (as before momentum update)
             weight_updates = -self.current_learning_rate * Layer.dweights
             bias_updates = -self.current_learning_rate * Layer.dbiases
-
-                    
         Layer.weights += weight_updates
         Layer.biases += bias_updates
 
-    # call once after any parameter updates
-    def post_update_params(self):
+    def post_update_params(self) -> None:
         self.iterations += 1
 
 class Optimizer_Adagrad:
     # learning rate of 1. is default for this optimizer
     # epsilon for numerical stability
-    def __init__(self, learning_rate=1., decay=0., epsilon=1e-7):
+    def __init__(self, 
+                 learning_rate: float = 1.,
+                 decay: float = 0., 
+                 epsilon: float = 1e-7) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
         self.iterations = 0
         self.epsilon = epsilon
 
-    # call once before any parameter updates
-    def pre_update_params(self):
+    def pre_update_params(self) -> None:
         if self.decay:
-            # adding 1 ensure value < 0
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
-    # update parameters
-    def update_params(self, Layer):
-
+    def update_params(self, Layer: Layer_Dense) -> None:
+        # here the square root of squred weight cache, get the idea from standard derivation formula.
         if not hasattr(Layer, "weight_cache"):
             Layer.weight_cache = np.zeros_like(Layer.weights)
             Layer.bias_cache = np.zeros_like(Layer.biases)
-        
-        # update cache with squared current gradients
         Layer.weight_cache += Layer.dweights**2
         Layer.bias_cache += Layer.dbiases**2
-
-        # vanilla + normalization with square rooted cache
-        Layer.weights += -self.current_learning_rate * Layer.dweights / (np.sqrt(Layer.weight_cache) + self.epsilon)        
+        Layer.weights += -self.current_learning_rate * Layer.dweights / (np.sqrt(Layer.weight_cache) + self.epsilon)  # vanilla + normalization with square rooted cache     
         Layer.biases += -self.current_learning_rate * Layer.dbiases / (np.sqrt(Layer.bias_cache) + self.epsilon)        
 
-
-    # call once after any parameter updates
-    def post_update_params(self):
+    def post_update_params(self) -> None:
         self.iterations += 1
 
 class Optimizer_RMSprop:
