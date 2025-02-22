@@ -224,6 +224,9 @@ class Activation_Sigmoid:
         * sigmod function only takes one input and returns one output.
     where we can improvize?
         * Implement additional activation functions with similar property as needed.
+        * Accuracy
+            * Use subset accuracy when exact matches are critical
+            * For tasks where partial matches are acceptable, consider using Hamming Loss, F1 Score, or Jaccard Similarity.
     why it is used?
         * In multi label classificatoin problems, each output neurons represents seperate class on its own.
         * Cat vs Dog, Cat or not Cat, Indoor or outdoor, etc.
@@ -235,6 +238,8 @@ class Activation_Sigmoid:
         * predictions method
         * Mathematically, sigmoid(x) = 1 / (1 + exp(-x))
         * squashes the raw scores into a range of [0, 1] and normalizes them.
+        * Accuracy is calculated by comparing each output neuron's value with the true label. 
+        * ypred = [[1, 0, 1 ], [0, 0, 0]] ytrue = [[1, 0, 1], [0, 1, 0]] accuracy = 5/6
     """
 
     def forward(self, 
@@ -490,22 +495,25 @@ class Loss_BinaryCrossentropy(Loss):
         self.dinputs = -((y_true / clipped_dvalues) - (1 - y_true)/(1 - clipped_dvalues)) / outputs
         self.dinputs /= samples
 
-# mean squared error loss
+
 class Loss_MeanSquaredError(Loss):
-    # forward pass
+    """
+    what it is?
+        * Mean squared error loss function is mostly used in regression tasks.
+    where we can improvize?
+    why it is used?
+    how it works?
+    """
+
     def forward(self, y_pred, y_true):
         sample_losses = np.mean((y_true - y_pred)**2, axis=-1)
         return sample_losses
-    # backward pass
+    
     def backward(self, dvalues, y_true):
-        # number of samples
+        
         samples = len(dvalues)
-        # number of outputs in every sample
         outputs = len(dvalues[0])
-
-        # gradients on values
         self.dinputs = -2 * (y_true - dvalues) / outputs
-        # normalize gradient
         self.dinputs = self.dinputs / samples
 
 # mean absolute error loss
