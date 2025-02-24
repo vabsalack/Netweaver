@@ -578,6 +578,7 @@ class Optimizer_SGD:
         * The SGD optimizer with momentum is usually one of 2 main choices for an optimizer in practice next to the Adam optimizer.
     where we can improvize?
         * calculate the limit of iterations before learning rate decays to near zero.
+        * how about implementing a decayer for momentum?
     why it is used?
         * It comes with learning rate decay and GD with momentum. Both are crucial for faster convergence.
     how it works?
@@ -587,6 +588,7 @@ class Optimizer_SGD:
         * post_update_params
         * Exponential decay, think about the 1/x graph values in range of x in [1, inf]. get the idea. lr = lr / (1 + x)
         * Implementation of momentum uses EMWA (Exponentially Weighted Moving Average) of gradients.
+        * weight_update = Wn + Wn-1*M^(n-1) + Wn-2*M^(n-2) + ... + W1*M^0. updates involved of 100% of current gradient and exponential decays of past gradients.
     """
     def __init__(self, 
                  learning_rate: float = 1., 
@@ -626,12 +628,17 @@ class Optimizer_Adagrad:
         * Adagrad optimizer is an adaptive learning rate optimizer.
     where we can improvize?
         * check how division of root squared of past gradients affects the learning rate. especially values le 0
+        * In the very first steps, the learning rate is the update to the parameters Layer.weights += -self.current_learning_rate * 1
+        * Initially, the learning rate is very high, and the updates are very large. lead to divergence.
+        * learning does stall.
     why it is used?
         * The idea here is to normalize updates made to the features.
         * This optimizer is not widely used, except for some specific applications.
     how it works?
         * init, pre_update_params, update_params, post_update_params
         * formula: lr = lr / (sqrt(cache) + epsilon)
+        * test it out in practice, notice how adaptation works in numbers.
+        * After no of epochs, the epoch gradients always less than cache gradients. results in diminishing gradients.
     """
     def __init__(self, 
                  learning_rate: float = 1.,
@@ -660,9 +667,23 @@ class Optimizer_Adagrad:
         self.iterations += 1
 
 class Optimizer_RMSprop:
-    # learning rate of 0.001 is default for this optimizer
-    # epsilon for numerical stability
-    def __init__(self, learning_rate=0.001, decay=0., epsilon=1e-7, beta=0.9):
+    """
+    what it is?
+        * RMSprop optimizer is an adaptive learning rate optimizer.
+        * It is a variant of Adagrad optimizer.
+    where we can improvize?
+    why it is used?
+        * It has decaying caching mechanism, which prevents the learning rate from becoming too small.
+        * learning does not stall.
+    how it works?
+        * init, pre_update_params, update_params, post_update_params
+        * learning rate of 0.001 works well and it's default in popular frameworks.   
+    """
+    def __init__(self, 
+                 learning_rate: float=0.001, 
+                 decay: float=0., 
+                 epsilon: float=1e-7, 
+                 beta: float=0.9) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -670,36 +691,36 @@ class Optimizer_RMSprop:
         self.epsilon = epsilon
         self.beta = beta
 
-    # call once before any parameter updates
-    def pre_update_params(self):
+    def pre_update_params(self) -> None:
         if self.decay:
-            # adding 1 ensure value < 0
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
-    # update parameters
-    def update_params(self, Layer):
-
+    def update_params(self, Layer: Layer_Dense) -> None:
+        """
+        what it does?
+            * formula: cache = cache * beta + (1 - beta) * gradient^2. EMWA discounting past gradients.
+            * (1 - beta) contribution term and (beta) decay term. test assigned each variable to it.
+        """
         if not hasattr(Layer, "weight_cache"):
             Layer.weight_cache = np.zeros_like(Layer.weights)
             Layer.bias_cache = np.zeros_like(Layer.biases)
-        
-        # update cache with squared current gradients
-        # exponentially discounts past gradients
-        # EWMA (Exponentially Weighted Moving Average)
         Layer.weight_cache = self.beta * Layer.weight_cache + (1 - self.beta) * Layer.dweights**2
         Layer.bias_cache += self.beta * Layer.bias_cache + (1- self.beta) * Layer.dbiases**2
-
-        # vanilla + normalization with square rooted cache
         Layer.weights += -self.current_learning_rate * Layer.dweights / (np.sqrt(Layer.weight_cache) + self.epsilon)        
         Layer.biases += -self.current_learning_rate * Layer.dbiases / (np.sqrt(Layer.bias_cache) + self.epsilon)        
 
-
-    # call once after any parameter updates
-    def post_update_params(self):
+    def post_update_params(self) -> None:
         self.iterations += 1
 
 class Optimizer_Adam:
-    # learning rate, beta_1 and beta_2 are in default values
+    """
+    what it is?
+        * Adam optimizer is an adaptive learning rate optimizer.
+        * It is a combination of RMSprop and Momentum optimizers.
+    where we can improvize?
+    why it is used?
+    how it works?
+    """
     def __init__(self, learning_rate=0.001, decay=0., epsilon=1e-7, beta_1=0.9, beta_2=0.999):
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
