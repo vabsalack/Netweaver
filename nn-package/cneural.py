@@ -574,13 +574,20 @@ class Loss_MeanAbsoluteError(Loss):
 class Optimizer_SGD:
     """
     what it is?
+        * Stochastic Gradient Descent (SGD) is the simplest optimizer.
+        * The SGD optimizer with momentum is usually one of 2 main choices for an optimizer in practice next to the Adam optimizer.
     where we can improvize?
+        * calculate the limit of iterations before learning rate decays to near zero.
     why it is used?
+        * It comes with learning rate decay and GD with momentum. Both are crucial for faster convergence.
     how it works?
+        * init
+        * pre_update_params
+        * update_params
+        * post_update_params
+        * Exponential decay, think about the 1/x graph values in range of x in [1, inf]. get the idea. lr = lr / (1 + x)
+        * Implementation of momentum uses EMWA (Exponentially Weighted Moving Average) of gradients.
     """
-    # decay, think about the 1/x graph values in x range [1, inf]. get the idea.
-    # exponential decay
-    # learning rate of 1. is default for this optimizer
     def __init__(self, 
                  learning_rate: float = 1., 
                  decay: float = 0., 
@@ -614,8 +621,18 @@ class Optimizer_SGD:
         self.iterations += 1
 
 class Optimizer_Adagrad:
-    # learning rate of 1. is default for this optimizer
-    # epsilon for numerical stability
+    """
+    what it is?
+        * Adagrad optimizer is an adaptive learning rate optimizer.
+    where we can improvize?
+        * check how division of root squared of past gradients affects the learning rate. especially values le 0
+    why it is used?
+        * The idea here is to normalize updates made to the features.
+        * This optimizer is not widely used, except for some specific applications.
+    how it works?
+        * init, pre_update_params, update_params, post_update_params
+        * formula: lr = lr / (sqrt(cache) + epsilon)
+    """
     def __init__(self, 
                  learning_rate: float = 1.,
                  decay: float = 0., 
@@ -631,13 +648,12 @@ class Optimizer_Adagrad:
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
     def update_params(self, Layer: Layer_Dense) -> None:
-        # here the square root of squred weight cache, get the idea from standard derivation formula.
         if not hasattr(Layer, "weight_cache"):
             Layer.weight_cache = np.zeros_like(Layer.weights)
             Layer.bias_cache = np.zeros_like(Layer.biases)
         Layer.weight_cache += Layer.dweights**2
         Layer.bias_cache += Layer.dbiases**2
-        Layer.weights += -self.current_learning_rate * Layer.dweights / (np.sqrt(Layer.weight_cache) + self.epsilon)  # vanilla + normalization with square rooted cache     
+        Layer.weights += -self.current_learning_rate * Layer.dweights / (np.sqrt(Layer.weight_cache) + self.epsilon)    
         Layer.biases += -self.current_learning_rate * Layer.dbiases / (np.sqrt(Layer.bias_cache) + self.epsilon)        
 
     def post_update_params(self) -> None:
