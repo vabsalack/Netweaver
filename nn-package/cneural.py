@@ -2,13 +2,6 @@ import numpy as np
 from typing import List, Dict, Optional, Tuple, Callable, TypeVar, Union, Any
 from numpy.typing import NDArray, DTypeLike, ArrayLike
 
-"""
-what it is?
-where we can improvize?
-why it is used?
-how it works?
-"""
-
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
 class Layer_Input:
@@ -20,7 +13,7 @@ class Layer_Input:
         """
         Performs a forward pass of the input layer.
 
-        Parameters:
+        #### Parameters:
         inputs (NDArray): Input data.
         """
         self.output = np.array(inputs, dtype=np.float64)
@@ -28,17 +21,13 @@ class Layer_Input:
 
 class Layer_Dense:
     """
-    what it is?
-        * Dense of neurons in a layer. 
-    where we can improvize?
-        * weights initialization is one of crucial part in model convergence.
-        * experiment with other initialization method such as he, xavier, etc.
-    why it is used?
-        * For creating a layer of neurons in a neural network.
-    how it works?
-        * init
-        * forward method
-        * backward method
+    #### what 
+        - create Dense Layer 
+        - args: nintputs, nneurons, wL1, wL2, bL1, bL2
+    #### Improve
+        - experiment with other initialization method such as he, xavier, etc.
+    #### Flow
+        - [init -> (forward -> backward)]
     """
 
     def __init__(self, n_inputs: int, 
@@ -48,9 +37,8 @@ class Layer_Dense:
                  bias_regularizer_L1: Union[float, int] = 0,
                  bias_regularizer_L2: Union[float, int] = 0) -> None:
         """
-        what it does?
-            * Initialize weights and biases
-            * sets regularization strength of L1 and L2
+        #### Note
+            - weights initialization is one of crucial part in model convergence.
         """
         self.weights = 0.01 * np.random.randn(n_inputs, n_neurons) 
         self.biases = np.zeros((1, n_neurons))
@@ -67,14 +55,12 @@ class Layer_Dense:
         
     def backward(self, dvalues: Float64Array2D) -> None:
         """
-        what it does?
-            * computes gradient of weights, biases and inputs
-            * applies regularization on weights and biases gradients
+        - compute gradients.
+        - apply regularization to computed gradients.
         """
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
         self.dinputs = np.dot(dvalues, self.weights.T)
-        # apply regularization
         # apply L1
         if self.weight_regularizer_L1 > 0:
             dL1 = np.ones_like(self.weights)
@@ -93,29 +79,18 @@ class Layer_Dense:
         
 class Layer_Dropout:
     """
-    what it is?
-        * Dropout is a regularization technique where randomly selected neurons are ignored during training.
-    where we can improvize?
-        * dropout rate is one of the hyperparameter, experiment with different values.
-    why it is used?
-        * To prevent overfitting.
-        * To improve generalization.
-        * To make model robust.
-        * To make model less sensitive to the specific weights of neurons.
-    how it works?
-        * init
-        * forward method
-        * backward method
-        * Randomly sets some of the activations to zero during training by sampling from a binomial distribution.
-        * This creates a dropout mask that deactivates certain neurons to prevent overfitting.
+    #### what
+        - Dropout is a regularization technique where randomly selected neurons are ignored during training.
+        - args: rate # percentage of neurons to be deactivated.
+    #### Improve
+    #### Flow
+        - [init -> (forward -> backward)]
+        - create binary mask from sample
     """
 
     def __init__(self, rate: Union[float, int]) -> None:
         """
-        what it does?
-            * sets dropout rate
-            * argument rate is the percentage of neurons to be deactivated.
-            * self.rate = 1 - rate, is the percentage of neurons to be activated because numpy binomial method expects probability of success.
+        - rate = 1-rate # np.random.binomial expects probability of success (1) not failure (0)
         """
         self.rate = 1 - rate
 
@@ -123,9 +98,7 @@ class Layer_Dropout:
                 inputs: Float64Array2D, 
                 training: bool) -> None:
         """
-        what it does?
-            * creates binary mask only on training.
-            * passes the input as it is during inference.
+        - divide the mask by the rate to scale the values.
         """
         self.inputs = inputs
         if not training:
@@ -140,17 +113,13 @@ class Layer_Dropout:
 
 class Activation_ReLU:
     """
-    what it is?
-        * ReLu activation function is used to introduce non-linearity in the neural network.
-    where we can improvize?
-        * leaky ReLu, Parametric ReLu, Exponential ReLu, etc.
-    why it is used?
-        * To learn non-linear patterns in the data.
-    how it works?
-        * forward method
-        * backward method
-        * predictions method
-        * Mathematically, ReLu(x) = max(0, x)
+    #### what
+        - introduce non-linearity in the network.
+    #### Improve
+        - leaky ReLu, Parametric ReLu, Exponential ReLu, etc.
+    #### Flow
+        - [(forward -> backward), predictions]
+        - ReLu(x) = max(0, x)
     """
 
     def forward(self, 
@@ -169,29 +138,18 @@ class Activation_ReLU:
 
 class Activation_Softmax:
     """
-    what it is?
-        * Softmax activation function is used to convert raw scores into probabilities.
-        * It is used in the output layer of a neural network for multi-class classification.
-        * It squashes the raw scores into a range of [0, 1] and normalizes them.
-    where we can improvize?
-        * Softmax is the best activation function for multi-class classification.
-    why it is used?
-        * To convert raw scores into probabilities.
-        * To make the model output interpretable.
-    how it works?
-        * forward method
-        * backward method
-        * predictions method
-        * Mathematically, softmax(x) = exp(x) / sum(exp(x))
-        * Exponentiation graph is rapid, avoid overflow by making maximum to zero. get the idea
+    #### what
+        - convert raw scores into probabilities. 
+        - use in the output layer of a neural network for **multi-class** classification.
+    #### Improve
+    ### Flow
+        - [(forward -> backward), predictions]
+        - softmax(x) = exp(x) / sum(exp(x))
     """
 
     def forward(self, 
                 inputs: Float64Array2D, 
                 training: bool) -> None:
-        """
-        calculates softmax values of inputs and stores it in self.output
-        """
         self.inputs = inputs
         exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
@@ -199,12 +157,9 @@ class Activation_Softmax:
 
     def backward(self, dvalues: Float64Array2D) -> None:
         """
-        what it does?
-            * creates self.dinputs beforehand since numpy array's aren't dynamically resizable.
-            * calculates gradient of softmax values and stores it in self.dinputs
-            * softmax derivative is calculated using jacobian matrix
-            * jacobian matrix is a square matrix containing all first-order partial derivatives of a vector-valued function.
-            * refer math behind back propogation for intuitive understanding
+        #### How
+            - softmax derivative is calculated using jacobian matrix
+            - jacobian matrix is a square matrix containing all first-order partial derivatives of a vector-valued function.
         """
         self.dinputs = np.empty_like(dvalues)
         for index, (single_output, single_dvalues) in enumerate(zip(self.output, dvalues)):
@@ -218,55 +173,35 @@ class Activation_Softmax:
 
 class Activation_Sigmoid:
     """
-    what it is?
-        * use primarily in the multi-label classification problem.
-        * It is used in the output layer of a neural network for binary logistic regression models
-        * sigmod function only takes one input and returns one output.
-    where we can improvize?
-        * Implement additional activation functions with similar property as needed.
-        * Accuracy
-            * Use subset accuracy when exact matches are critical
-            * For tasks where partial matches are acceptable, consider using Hamming Loss, F1 Score, or Jaccard Similarity.
-    why it is used?
-        * In multi label classificatoin problems, each output neurons represents seperate class on its own.
-        * Cat vs Dog, Cat or not Cat, Indoor or outdoor, etc.
-        * needs an activation function that can output a probability range of [0, 1].
-        * This function must be paired with respective loss function. one is binary cross-entropy loss.
-    how it works?
-        * forward method
-        * backward method
-        * predictions method
-        * Mathematically, sigmoid(x) = 1 / (1 + exp(-x))
-        * squashes the raw scores into a range of [0, 1] and normalizes them.
-        * Accuracy is calculated by comparing each output neuron's value with the true label. 
-        * ypred = [[1, 0, 1 ], [0, 0, 0]] ytrue = [[1, 0, 1], [0, 1, 0]] accuracy = 5/6
+    #### What
+        - use primarily in the multi-label classification problem. Each output neurons represents seperate class on its own.
+        - use in the output layer of a neural network for binary logistic regression models
+    #### Improve
+        - Accuracy
+            - Use subset accuracy when exact matches are critical.
+            - For tasks where partial matches are acceptable(default here), consider using Hamming Loss, F1 Score, or Jaccard Similarity.
+    ### Flow
+        - [(forward -> backward), predictions]
+        - sigmoid(x) = 1 / (1 + exp(-x))
+        - pair it with compatible loss function such as binary cross-entropy loss.
     """
 
     def forward(self, 
                 inputs: Float64Array2D, 
                 training: bool) -> None:
-        """
-        where we can improve?
-            * self.output range is [0, 1]. unsigned float value. set dtype of values in the array to save memory
-            * set dtype for self.outpout and to variables in respective loss function
-        """
         self.inputs = inputs
         self.output = 1 / (1 + np.exp(-inputs))
 
     def backward(self, dvalues: Float64Array2D) -> None:
         """
-        what it does? 
-            * The derivative of the sigmoid function is calculated as:
-            * sigmoid'(x) = sigmoid(x) * (1 - sigmoid(x))
+        - derivate: sigmoid'(x) = sigmoid(x) * (1 - sigmoid(x))
         """
         self.dinputs = dvalues * (1 - self.output) * self.output
 
     def predictions(self, outputs: Float64Array2D) -> np.ndarray[Tuple[int, int], np.dtype[np.int64]]:
         """
-        what it does?
-            * product of arr: NDArray[bool_] and x: int is y: NDArray[int64]
-            * False values replaced by 0 and True values replaced by x
-            * array([False, True]) * -2 = array([0, -2])
+            - product of arr: NDArray[bool_] and x: int is y: NDArray[int64]
+            - array([False, True]) * -2 = array([0, -2])
         """
         return (outputs > 0.5) * 1
 
@@ -680,10 +615,10 @@ class Optimizer_RMSprop:
         * learning rate of 0.001 works well and it's default in popular frameworks.   
     """
     def __init__(self, 
-                 learning_rate: float=0.001, 
-                 decay: float=0., 
-                 epsilon: float=1e-7, 
-                 beta: float=0.9) -> None:
+                 learning_rate: float = 0.001, 
+                 decay: float = 0., 
+                 epsilon: float = 1e-7, 
+                 beta: float = 0.9) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -715,13 +650,24 @@ class Optimizer_RMSprop:
 class Optimizer_Adam:
     """
     what it is?
-        * Adam optimizer is an adaptive learning rate optimizer.
+        * Adaptive Moment Estimation optimizer is an adaptive learning rate optimizer.
         * It is a combination of RMSprop and Momentum optimizers.
     where we can improvize?
+        * Adam requires additional memory to store the first and second moment estimates for each parameter.
     why it is used?
+        * Combines the power of both firsand second moments
+        * Commonly used in deep learning tasks.
+        * It is robust to noisy gradients and sparse gradients
     how it works?
+        * init, pre_update_params, update_params, post_update_params
+        * bias correction, In inital stages, the first and second moments are biased towards zero.
     """
-    def __init__(self, learning_rate=0.001, decay=0., epsilon=1e-7, beta_1=0.9, beta_2=0.999):
+    def __init__(self, 
+                 learning_rate: float = 0.001, 
+                 decay: float = 0., 
+                 epsilon: float = 1e-7, 
+                 beta_1: float = 0.9, 
+                 beta_2: float = 0.999) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -730,42 +676,38 @@ class Optimizer_Adam:
         self.beta_1 = beta_1        
         self.beta_2 = beta_2     
 
-    def pre_update_params(self):
+    def pre_update_params(self) -> None:
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
-    def update_params(self, Layer):
-        
+    def update_params(self, Layer: Layer_Dense) -> None:
+        """
+        what it does?
+            * params update: w_t = w_t-1 - lr * m_t / (sqrt(v_t) + epsilon)
+            * first moment:  m_t = beta_1 * m_t-1 + (1 - beta_1) * gradient
+            * second moment: v_t = beta_2 * v_t-1 + (1 - beta_2) * gradient^2
+        """
         if not hasattr(Layer, "weight_cache"):
             Layer.weight_momentums = np.zeros_like(Layer.weights)
             Layer.bias_momentums = np.zeros_like(Layer.biases)
             Layer.weight_cache = np.zeros_like(Layer.weights)
             Layer.bias_cache = np.zeros_like(Layer.biases)
-
-        # scaled momentums (EWMA)
+        # first moment
         Layer.weight_momentums = self.beta_1 * Layer.weight_momentums + (1 - self.beta_1) * Layer.dweights
         Layer.bias_momentums = self.beta_1 * Layer.bias_momentums + (1 - self.beta_1) * Layer.dbiases
-        # bias correction
-        weight_momentums_corrected = Layer.weight_momentums / (1 - self.beta_1 ** (self.iterations + 1))
+        weight_momentums_corrected = Layer.weight_momentums / (1 - self.beta_1 ** (self.iterations + 1)) # bias correction
         bias_momentums_corrected = Layer.bias_momentums / (1 - self.beta_1 ** (self.iterations + 1))
-
-        # scaled gradients (EWMA)
+        # second moment
         Layer.weight_cache = self.beta_2 * Layer.weight_cache + (1 - self.beta_2) * Layer.dweights**2
         Layer.bias_cache = self.beta_2 * Layer.bias_cache + (1 - self.beta_2) * Layer.dbiases**2
-        # bias correction
-        weight_cache_corrected = Layer.weight_cache / (1 - self.beta_2 ** (self.iterations + 1))
+        weight_cache_corrected = Layer.weight_cache / (1 - self.beta_2 ** (self.iterations + 1)) # bias correction
         bias_cache_corrected = Layer.bias_cache / (1 - self.beta_2 ** (self.iterations + 1))
-        
         # params updates
         Layer.weights += -self.current_learning_rate * weight_momentums_corrected / (np.sqrt(weight_cache_corrected) + self.epsilon)
         Layer.biases += -self.current_learning_rate * bias_momentums_corrected / (np.sqrt(bias_cache_corrected) + self.epsilon)
 
-
-    def post_update_params(self):
+    def post_update_params(self) -> None:
         self.iterations += 1
-
-
-
 
 
 
