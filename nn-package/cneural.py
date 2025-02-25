@@ -55,6 +55,7 @@ class Layer_Dense:
         
     def backward(self, dvalues: Float64Array2D) -> None:
         """
+        #### Note
         - compute gradients.
         - apply regularization to computed gradients.
         """
@@ -81,7 +82,7 @@ class Layer_Dropout:
     """
     #### what
         - Dropout is a regularization technique where randomly selected neurons are ignored during training.
-        - args: rate # percentage of neurons to be deactivated.
+        - args: rate (percentage of neurons to be deactivated)
     #### Improve
     #### Flow
         - [init -> (forward -> backward)]
@@ -145,6 +146,7 @@ class Activation_Softmax:
     ### Flow
         - [(forward -> backward), predictions]
         - softmax(x) = exp(x) / sum(exp(x))
+        - pair it with compatible loss function such as categorical cross-entropy loss.
     """
 
     def forward(self, 
@@ -158,8 +160,7 @@ class Activation_Softmax:
     def backward(self, dvalues: Float64Array2D) -> None:
         """
         #### How
-            - softmax derivative is calculated using jacobian matrix
-            - jacobian matrix is a square matrix containing all first-order partial derivatives of a vector-valued function.
+            - softmax derivative is calculated using jacobian matrix (square matrix)
         """
         self.dinputs = np.empty_like(dvalues)
         for index, (single_output, single_dvalues) in enumerate(zip(self.output, dvalues)):
@@ -208,17 +209,14 @@ class Activation_Sigmoid:
 
 class Activation_Linear:
     """
-    what it is?
-        * Linear activation function is used to pass the input directly to the output without any modification.
-    where we can improvize?
-        * This is a simple activation function, not much to improve.
-    why it is used?
-        * It is used in the output layer for regression tasks where we need to predict continuous values.
-    how it works?
-        * forward method
-        * backward method
-        * predictions method
-        * It simply returns the input as the output.
+    #### what
+        - Linear activation function is used to pass the input directly to the output without any modification.
+        - use in the output layer for regression tasks where we need to predict continuous values.
+    #### Improve
+    ### Flow
+        - [(forward -> backward), predictions]
+        - f(x) = x
+        - pair it with compatible loss function such as mean squared/absolute error loss.
     """
 
     def forward(self, 
@@ -235,17 +233,15 @@ class Activation_Linear:
 
 class Loss:
     """
-    what it is?
-        * Base class for loss functions.
-    where we can improvize?
-        * Implement additional loss functions as needed.
-    why it is used?
-        * To calculate the difference between the predicted output and the actual output.
-    how it works?
-        * remember_trainable_layers method sets self.trainable_layers property.
-        * regularization_loss method calculates the regularization loss using layers in self.trainable_layers.
-        * calculate method calculates the data loss using child class's forward method and regularization loss using regularization_loss method.
-        * It provides methods to calculate the loss and its gradient.
+    #### what
+        - Base class for loss functions.
+    #### Improve
+        - Implement additional loss functions as needed.
+    ### Flow
+        - [remember_trainable_layers -> regularization_loss -> calculate]
+        - remember_trainable_layers method sets self.trainable_layers property.
+        - regularization_loss method calculates the regularization loss using layers in self.trainable_layers.
+        - calculate method calculates the data loss using child class's forward method and regularization loss from regularization_loss method.
     """
 
     def remember_trainable_layers(self, trainable_layers: List[Union[Layer_Dense]]) -> None:
@@ -270,13 +266,12 @@ class Loss:
                   output: Float64Array2D, 
                   y, # y type can be one-hot encoded or sparse lables
                   *, 
-                  include_regularization: bool=False) -> Union[float, Tuple[float, float]]:
+                  include_regularization: bool=False) -> Union[float, Tuple[np.float64, np.float64]]:
         """
-        what it does?
-            * calculates data and regularization loss
-            * data loss is the mean of sample losses
-            * regularization loss is the sum of L1 and L2 penalties
-            * returns only data loss by default
+        #### Note
+            - data loss is the mean of sample losses
+            - regularization loss is the sum of L1 and L2 penalties
+            - returns only data loss by default
         """
         sample_losses = self.forward(output, y)
         data_loss = np.mean(sample_losses)
@@ -287,29 +282,23 @@ class Loss:
 
 class Loss_CategoricalCrossentropy(Loss):
     """
-    what it is?
-        * Categorical cross-entropy loss function is used in multi-class (3 and more) classification tasks.
-        * It's the negative-log-likelihood of likelihood functoin 
-        * It measures the difference between two probability distributions.
-    where we can improvize?
-        * Implement additional loss functions as needed.
-    why it is used?
-        * To  find the MLE (Maximum Likelihood Estimation) of the model.
-    how it works?
-        * forward method
-        * backward method
-        * formula: -sum(y_true * log(y_pred))
+   #### what
+        - Categorical cross-entropy loss function is used in multi-class (3 and more) classification tasks.
+        - It's the negative-log-likelihood of likelihood function 
+        - use to find the MLE (Maximum Likelihood Estimation) of the model.
+    #### Improve
+    #### Flow
+        - [forward -> backward]
+        - formula: -sum(y_true * log(y_pred))
     """
-
     def forward(self,
                 y_pred: Float64Array2D, 
                 y_true) -> np.ndarray[Tuple[int], np.dtype[np.float64]]:  # y_true type can be one-hot encoded or sparse lables
         """
-        what it does?
-            * clips the predicted values to prevent division by zero, log of zero is undefined and derivate of log(x) is 1/x precision overflows.
-            * clips both sides to not drag mean towards any value
-            * handles both one-hot encoded and sparse labels
-            * calculates the negative log likelihood of only the correct class probabilities. -( 0.log(x.x) + 1.log(x.x) + 0.log(x.x) + 0.log(x.x) ) 
+        #### Note
+            - clips the predicted values to prevent division by zero, log of zero is undefined and derivate of log(x) is 1/x precision overflows.
+            - clips both sides to not drag mean towards any value
+            - computes the negative log likelihood of only the correct class probabilities. -( 0.log(x.x) + 1.log(x.x) + 0.log(x.x) + 0.log(x.x) ) 
         """
         samples = len(y_pred)
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
@@ -324,10 +313,9 @@ class Loss_CategoricalCrossentropy(Loss):
     def backward(self, dvalues: Float64Array2D, 
                  y_true) -> None: 
         """
-        what it does?
-            * Expects y_true to be one-hot encoded.
-            * calculates the gradient of loss functions with respect to the predicted values.
-            * normalizes the gradient by the number of samples.
+        #### Note
+            - Expects y_true to be one-hot encoded.
+            - **normalizes the gradient by the number of samples.**
         """
         samples = len(dvalues)
         labels = len(dvalues[0])
@@ -340,31 +328,24 @@ class Loss_CategoricalCrossentropy(Loss):
 
 class Activation_Softmax_Loss_CategoricalCrossentropy:
     """
-    what it is?
-        * Softmax classifier is a combination of softmax activation and categorical cross-entropy loss.
-        * It is used in multi-class classification tasks.
-        * refer the math behind softmax and cross-entropy loss gradients for intuitive understanding.
-    where we can improvize?
-        * Implement additional loss functions as needed.
-    why it is used?
-        * faster backward step
-    how it works?
-        * init
-        * forward method
-        * backward method
-        * gradients of loss functions with respect to the penultimate layer's outputs reduced to a single step.
-        * formula = predicted values - true values
+    #### what
+        - Softmax classifier is a combination of softmax activation and categorical cross-entropy loss.
+        - peforms backward pass in a single step faster than traditional (softmax and categorical cross-entropy loss) backward methods.
+        - gradients of loss functions with respect to the penultimate layer's outputs reduced to a single step.
+    #### Improve    
+    #### Flow
+        - [init -> forward -> backward]
+        - formula = predicted values - true values
     """
 
     def __init__(self) -> None:
         self.activation = Activation_Softmax()
         self.loss = Loss_CategoricalCrossentropy()
 
-    def forward(self, inputs: Float64Array2D, y_true) -> float:
+    def forward(self, inputs: Float64Array2D, y_true) -> np.float64:
         """
-        what it does?
-            * calculates the softmax values of inputs
-            * return the loss value using the calculated softmax output and true labels
+        #### Note
+            - performs forward method of softmax and loss classes.
         """
         self.activation.forward(inputs)
         self.output = self.activation.output
@@ -372,10 +353,10 @@ class Activation_Softmax_Loss_CategoricalCrossentropy:
     
     def backward(self, dvalues: Float64Array2D, y_true) -> None:
         """
-        what it does?
-            * expects y_true to be sparse labels
-            * copy the dvalues to self.dinputs
-            * calculates gradient and normalize them
+        #### Note
+            - expects y_true to be sparse labels
+            - copy the dvalues to self.dinputs
+            - compute gradient and normalize them
         """
         samples = len(dvalues)
         if len(y_true.shape) == 2:
