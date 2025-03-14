@@ -9,7 +9,7 @@ class Layer_Input:
     Layer_Input class represents the input layer of the neural network.
     """
 
-    def forward(self, inputs: ArrayLike) -> None: 
+    def forward(self, inputs: ArrayLike, training: bool) -> None: 
         """
         Performs a forward pass of the input layer.
 
@@ -49,7 +49,7 @@ class Layer_Dense:
         self.weight_regularizer_L2 = weight_regularizer_L2
         self.bias_regularizer_L2 = bias_regularizer_L2
 
-    def forward(self, inputs: Float64Array2D) -> None:
+    def forward(self, inputs: Float64Array2D, training: bool) -> None:
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
         
@@ -111,7 +111,29 @@ class Layer_Dropout:
     def backward(self, dvalues: Float64Array2D) -> None:
         self.dinputs = dvalues * self.binary_mask
 
+class Accuracy:
+    def calculate(self, predictions, y):
+        comparisons = self.compare(predictions, y)
+        accuracy = np.mean(comparisons)
+        return accuracy
+    
+class Accuracy_categorical(Accuracy):
+    def init(self, y):
+        pass
+    def compare(self, predictions, y):
+        if len(y.shape) == 2:
+            y = np.argmax(y, axis=1)
+        return predictions == y
 
+class Accuracy_Regression(Accuracy):
+    def __init__(self):
+        self.precision = None
+    def init(self, y, reinit=False):
+        if self.precision is None or reinit:
+            self.precision = np.std(y) / 250
+    def compare(self, predictions, y):
+        return np.absolute(predictions - y) < self.precision
+    
 class Activation_ReLU:
     """
     #### what
@@ -243,23 +265,20 @@ class Loss:
         - regularization_loss method calculates the regularization loss using layers in self.trainable_layers.
         - calculate method calculates the data loss using child class's forward method and regularization loss from regularization_loss method.
     """
-
-    def remember_trainable_layers(self, trainable_layers: List[Union[Layer_Dense]]) -> None:
+    def remember_trainable_layers(self, trainable_layers: List[Layer_Dense]) -> None:
         self.trainable_layers = trainable_layers
-
+    
     def regularization_loss(self) -> float:
-        regularization_loss: float = .0
+        regularization_loss = 0.0
         for layer in self.trainable_layers:
-            # L1 penalty
-            if layer.weight_regularizer_L1 > 0:
+            if layer.weight_regularizer_L1 > 0: # L1
                 regularization_loss += layer.weight_regularizer_L1 * np.sum(np.abs(layer.weights))
             if layer.bias_regularizer_L1 > 0:
                 regularization_loss += layer.bias_regularizer_L1 * np.sum(np.abs(layer.biases))
-            # L2 penalty
-            if layer.weight_regularizer_L2 > 0:
-                regularization_loss += layer.weight_regularizer_L2 * np.sum(layer.weights * layer.weights)
+            if layer.weight_regularizer_L2 > 0: # L2
+                regularization_loss += layer.weight_regularizer_L2 * np.sum(layer.weights ** 2)
             if layer.bias_regularizer_L2 > 0:
-                regularization_loss += layer.bias_regularizer_L2 * np.sum(layer.biases * layer.biases)
+                regularization_loss += layer.bias_regularizer_L2 * np.sum(layer.biases ** 2)
         return regularization_loss
 
     def calculate(self, 
@@ -295,8 +314,8 @@ class Loss_CategoricalCrossentropy(Loss):
                 y_pred: Float64Array2D, 
                 y_true) -> np.ndarray[Tuple[int], np.dtype[np.float64]]:  # y_true type can be one-hot encoded or sparse lables
         """
-        #### Note
-            - clips the predicted values to prevent division by zero, log of zero is undefined and derivate of log(x) is 1/x precision overflows.
+        #### Note 
+            - clips the predicted values to prevent division by zero, log of zero is undefined (p.log(1e-323)=-inf) and derivate of log(x) is 1/x precision overflows.
             - clips both sides to not drag mean towards any value
             - computes the negative log likelihood of only the correct class probabilities. -( 0.log(x.x) + 1.log(x.x) + 0.log(x.x) + 0.log(x.x) ) 
         """
@@ -367,29 +386,22 @@ class Activation_Softmax_Loss_CategoricalCrossentropy:
 
 class Loss_BinaryCrossentropy(Loss):
     """
-    what it is?
-        * Binary cross-entropy loss function is used in binary regression models.
-        * used primarily in the multi-label classification problem.
-    where we can improvize?
-    why it is used?
-        * Unlike categorical cross-entropy, it measures negative-log-likelihood of each output neurons seperately and average them.
-    how it works?
-        * forward
-        * backward
-        * formula: -sum(y_true * log(y_pred) + (1 - y_true) * log(1 - y_pred))
-        * Each sample loss is a vector of output neuron's losses and it's average used as the final loss for that sample.
+    #### what
+        - Binary cross-entropy loss function is used in binary regression models.
+        - used primarily in the multi-label classification problem.
+    #### Improve
+    #### Flow
+        - [forward -> backward]
+        - formula: avg(-sum(yi_true * log(yi_pred) + (1 - yi_true) * log(1 - yi_pred)))
     """
-
     def forward(self, 
                 y_pred: Float64Array2D, 
                 y_true: np.ndarray[Tuple[int, int], np.dtype[np.int64]]) -> np.array[Tuple[int], np.dtype[np.float64]]:
         """
-        what it does?
-            * clips the predicted values to prevent division by zero, log of zero is undefined and derivate of log(x) is 1/x precision overflows.
-            * clips both sides to not drag mean towards any value
-            * calculates negative log likelihood of each outputs of a sample and average them.
+        #### Note
+            - Unlike categorical cross-entropy, it measures negative-log-likelihood of each output neurons seperately and **average** them.
+            - Each sample loss is a vector of output neuron's losses and it's average used as the final loss for that sample.
         """
-        # np.log(1e-323) = -inf
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
         sample_losses = -(y_true * np.log(y_pred_clipped) + (1 -y_true) * np.log(1 - y_pred_clipped))
         sample_losses = np.mean(sample_losses, axis=-1)
@@ -399,74 +411,63 @@ class Loss_BinaryCrossentropy(Loss):
                  dvalues: Float64Array2D, 
                  y_true: np.ndarray[Tuple[int, int], np.dtype[np.int64]]) -> None:
         """
-        what it does?
-            * Final loss of a sample is average of each output neuron's loss.
-            * gradient of sub each neuron's loss is - ((y_true / y_pred) - (1 - y_true) / (1 - y_pred))
-            * partial derivative of final loss w.r.t output neuron's value is - ((y_true / y_pred) - (1 - y_true) / (1 - y_pred)) / outputs
-            * normalize the gradient by the number of samples in the batch.
+        #### Note
+            - ∂L/∂y^ =  -((y_true / y_pred)-(1 - y_true)/(1 - y_pred))/outputs.
+            - Normalize the gradient by the number of samples in the batch.
         """
         samples = len(dvalues)
         outputs = len(dvalues[0])
         clipped_dvalues = np.clip(dvalues, 1e-7, 1 - 1e-7)
-        self.dinputs = -((y_true / clipped_dvalues) - (1 - y_true)/(1 - clipped_dvalues)) / outputs
+        self.dinputs = -((y_true / clipped_dvalues) - ((1 - y_true)/(1 - clipped_dvalues))) / outputs
         self.dinputs /= samples
 
 
 class Loss_MeanSquaredError(Loss):
     """
-    what it is?
-        * Mean squared error(MSE) L2 loss function is used in single or multiple output regression tasks.
-    where we can improvize?
-    why it is used?
-        * MSE(L2) most commonly used loss function for regression tasks over MAE(L1).
-    how it works?
-        * forward
-        * backward
-        * Assumption is that the error residuals are normally distributed.
-        * refer to it's likelihood function for intuitive understanding.
+    #### What
+        - Mean squared error(MSE) loss function is used in single or multiple output regression tasks.
+        - MSE(L2) most commonly used loss function for regression tasks over MAE(L1).
+        - Assumption is that the error residuals are normally distributed.
+    #### Improve
+    #### Flow
+        - [forward -> backward]
+        - formula: mean((y_true - y_pred)^2)
     """
 
     def forward(self, y_pred: Float64Array2D,
                  y_true: Float64Array2D) -> np.array[Tuple[int], np.dtype[np.float64]]:
-        """
-        * loss formula: mean((y_true - y_pred)^2) applies to each sample in a batch.
-        """
         sample_losses = np.mean((y_true - y_pred)**2, axis=-1)
         return sample_losses
 
     def backward(self, dvalues: Float64Array2D, 
                  y_true: Float64Array2D) -> None:
         """
-        what it does?
-            * computes gradient of loss functions with respect to the predicted values.
-            * formula = -2 * (y_true - y_pred) / outputs is for one of predicted outputs in a sample.
-            * normalize the gradient by the number of samples in the batch.
+        #### Note
+            - ∂L/∂y^ = -2 * (y_true - y_pred) / outputs =  for one of predicted outputs in a sample.
         """
         samples = len(dvalues)
         outputs = len(dvalues[0])
-        self.dinputs = -2 * (y_true - dvalues) / outputs
+        self.dinputs = -2 * (y_true - dvalues) / outputs # wonder log and negative missing. it's cancelled out. look into MLE.
         self.dinputs = self.dinputs / samples
 
 
 class Loss_MeanAbsoluteError(Loss):
     """
-    what it is?
-        * Mean absolute error(MAE) L1 loss function is used in single or multiple output regression tasks.
-    where we can improvize?
-    why it is used?
-        * MAE(L1) is less sensitive to outliers than MSE(L2).
-        * It is used in regression tasks where outliers are present.
-    how it works?
-        * forward
-        * backward
-        * Assumption is that the error residuals are Laplace distributed.
+    #### What
+        - Mean absolute error(MAE) loss function is used in single or multiple output regression tasks.
+        - MAE(L1) is less sensitive to outliers than MSE(L2).
+    #### Improve
+    #### Flow
+        - [forward -> backward]
+        - Assumption is that the error residuals are Laplace distributed.
     """
 
     def forward(self, 
                 y_pred: Float64Array2D, 
                 y_true: Float64Array2D) -> np.array[Tuple[int], np.dtype[np.float64]]:
         """
-        * loss formula: mean(abs(y_true - y_pred)) applies to each sample in a batch.
+        #### Note
+            - loss formula: mean(abs(y_true - y_pred))
         """
         sample_losses = np.mean(np.abs(y_true - y_pred), axis=-1)
         return sample_losses
@@ -475,36 +476,27 @@ class Loss_MeanAbsoluteError(Loss):
                  dvalues: Float64Array2D,
                 y_true: Float64Array2D) -> None:
         """
-        what it does?
-            * computes gradient of loss functions with respect to the predicted values.
-            * formula = sign(y_true - y_pred) / outputs is for one of predicted outputs in a sample.
-            * The derivative of an absolute value equals 1 if this value is greater than 0, or -1 if it’s less than 0. The derivative does not exist for a value of 0
-            * np.sign returns -1 for negative values, 0 for 0, and 1 for positive values.
-            * normalize the gradient by the number of samples in the batch.
+        #### Note 
+            - ∂L/∂y^ = sign(y_true - y_pred) / outputs = for one of predicted outputs in a sample.
+            - normalize the gradient by the number of samples in the batch.
         """
         samples = len(dvalues)
         outputs = len(dvalues[0])
-        self.dinputs = np.sign(y_true - dvalues) / outputs
+        self.dinputs = np.sign(y_true - dvalues) / outputs # np.sign returns -1 (<0) 0 (=0) 1 (>0)
         self.dinputs = self.dinputs / samples
 
 class Optimizer_SGD:
     """
-    what it is?
-        * Stochastic Gradient Descent (SGD) is the simplest optimizer.
-        * The SGD optimizer with momentum is usually one of 2 main choices for an optimizer in practice next to the Adam optimizer.
-    where we can improvize?
-        * calculate the limit of iterations before learning rate decays to near zero.
-        * how about implementing a decayer for momentum?
-    why it is used?
-        * It comes with learning rate decay and GD with momentum. Both are crucial for faster convergence.
-    how it works?
-        * init
-        * pre_update_params
-        * update_params
-        * post_update_params
-        * Exponential decay, think about the 1/x graph values in range of x in [1, inf]. get the idea. lr = lr / (1 + x)
-        * Implementation of momentum uses EMWA (Exponentially Weighted Moving Average) of gradients.
-        * weight_update = Wn + Wn-1*M^(n-1) + Wn-2*M^(n-2) + ... + W1*M^0. updates involved of 100% of current gradient and exponential decays of past gradients.
+    #### What
+        - Stochastic Gradient Descent is the simplest optimizer.
+        - SGD with momentum is usually one of 2 main choices for an optimizer in practice next to the Adam optimizer.
+        - It comes with learning rate decay and GD with momentum. Both are crucial for faster convergence.
+        - weight_update = Wn + Wn-1*M^(n-1) + Wn-2*M^(n-2) + ... + W1*M^0. M is the momentum. compare it with EWMA β, (1 - β)
+    #### Improve
+        - calculate the no of iterations before learning rate decays to near zero.
+        - how about implementing a decayer for momentum?
+    #### Flow
+        - [init -> (pre_update_params -> update_params -> post_update_params)] 
     """
     def __init__(self, 
                  learning_rate: float = 1., 
@@ -518,14 +510,14 @@ class Optimizer_SGD:
 
     def pre_update_params(self):
         if self.decay:
-            self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
+            self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations)) # 1/x graph
 
     def update_params(self, Layer: Layer_Dense) -> None:
         if self.momentum:
             if not hasattr(Layer, "weight_momentums"):
                 Layer.weight_momentums = np.zeros_like(Layer.weights)
                 Layer.bias_momentums = np.zeros_like(Layer.biases)
-            weight_updates = self.momentum * Layer.weight_momentums - self.current_learning_rate * Layer.dweights
+            weight_updates = self.momentum * Layer.weight_momentums - self.current_learning_rate * Layer.dweights 
             Layer.weight_momentums = weight_updates
             bias_updates = self.momentum * Layer.bias_momentums - self.current_learning_rate * Layer.dbiases
             Layer.bias_momentums = bias_updates
@@ -540,21 +532,14 @@ class Optimizer_SGD:
 
 class Optimizer_Adagrad:
     """
-    what it is?
-        * Adagrad optimizer is an adaptive learning rate optimizer.
-    where we can improvize?
-        * check how division of root squared of past gradients affects the learning rate. especially values le 0
-        * In the very first steps, the learning rate is the update to the parameters Layer.weights += -self.current_learning_rate * 1
-        * Initially, the learning rate is very high, and the updates are very large. lead to divergence.
-        * learning does stall.
-    why it is used?
-        * The idea here is to normalize updates made to the features.
-        * This optimizer is not widely used, except for some specific applications.
-    how it works?
-        * init, pre_update_params, update_params, post_update_params
-        * formula: lr = lr / (sqrt(cache) + epsilon)
-        * test it out in practice, notice how adaptation works in numbers.
-        * After no of epochs, the epoch gradients always less than cache gradients. results in diminishing gradients.
+    #### What
+        - Adagrad optimizer is an adaptive learning rate optimizer. It is not widely used.
+        - learning does stall (1/X) x tends to 0.
+        - The idea here is to normalize updates made to the features.
+    #### Improve
+    #### Flow
+        - [init -> (pre_update_params -> update_params -> post_update_params)]
+        - formula: lr = lr / (sqrt(cache) + epsilon)
     """
     def __init__(self, 
                  learning_rate: float = 1.,
@@ -584,16 +569,14 @@ class Optimizer_Adagrad:
 
 class Optimizer_RMSprop:
     """
-    what it is?
-        * RMSprop optimizer is an adaptive learning rate optimizer.
-        * It is a variant of Adagrad optimizer.
-    where we can improvize?
-    why it is used?
-        * It has decaying caching mechanism, which prevents the learning rate from becoming too small.
-        * learning does not stall.
-    how it works?
-        * init, pre_update_params, update_params, post_update_params
-        * learning rate of 0.001 works well and it's default in popular frameworks.   
+    #### What
+        - RMSprop optimizer(Adagrad variant) is an adaptive learning rate optimizer. learning does not stall.
+        - Implements decaying caching mechanism, which prevents the learning rate from becoming too small.
+    #### Improve
+    #### Flow
+        - [init -> (pre_update_params -> update_params -> post_update_params)]
+        - formula: lr = lr / (sqrt(cache) + epsilon)
+        - cache = cache * beta + (1 - beta) * gradient^2 **EMWA discounting past gradients**
     """
     def __init__(self, 
                  learning_rate: float = 0.001, 
@@ -612,11 +595,6 @@ class Optimizer_RMSprop:
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
     def update_params(self, Layer: Layer_Dense) -> None:
-        """
-        what it does?
-            * formula: cache = cache * beta + (1 - beta) * gradient^2. EMWA discounting past gradients.
-            * (1 - beta) contribution term and (beta) decay term. test assigned each variable to it.
-        """
         if not hasattr(Layer, "weight_cache"):
             Layer.weight_cache = np.zeros_like(Layer.weights)
             Layer.bias_cache = np.zeros_like(Layer.biases)
@@ -630,18 +608,11 @@ class Optimizer_RMSprop:
 
 class Optimizer_Adam:
     """
-    what it is?
-        * Adaptive Moment Estimation optimizer is an adaptive learning rate optimizer.
-        * It is a combination of RMSprop and Momentum optimizers.
-    where we can improvize?
-        * Adam requires additional memory to store the first and second moment estimates for each parameter.
-    why it is used?
-        * Combines the power of both firsand second moments
-        * Commonly used in deep learning tasks.
-        * It is robust to noisy gradients and sparse gradients
-    how it works?
-        * init, pre_update_params, update_params, post_update_params
-        * bias correction, In inital stages, the first and second moments are biased towards zero.
+    #### What
+        - Adaptive Moment Estimation optimizer is an adaptive learning rate optimizer. (Momentum L1 moment) + RMSprop (L2 moment)
+        - It is robust to noisy gradients and sparse gradients
+    #### Flow
+        - [init -> (pre_update_params -> update_params -> post_update_params)]
     """
     def __init__(self, 
                  learning_rate: float = 0.001, 
@@ -663,10 +634,11 @@ class Optimizer_Adam:
 
     def update_params(self, Layer: Layer_Dense) -> None:
         """
-        what it does?
-            * params update: w_t = w_t-1 - lr * m_t / (sqrt(v_t) + epsilon)
-            * first moment:  m_t = beta_1 * m_t-1 + (1 - beta_1) * gradient
-            * second moment: v_t = beta_2 * v_t-1 + (1 - beta_2) * gradient^2
+        #### Note
+            - first moment:  m_t = beta_1 * m_t-1 + (1 - beta_1) * gradient
+            - second moment: v_t = beta_2 * v_t-1 + (1 - beta_2) * gradient^2
+            - params update: w_t = w_t-1 - lr * m_t / (sqrt(v_t) + epsilon)
+            - bias correction in inital stages, the first and second moments are biased towards zero.
         """
         if not hasattr(Layer, "weight_cache"):
             Layer.weight_momentums = np.zeros_like(Layer.weights)
