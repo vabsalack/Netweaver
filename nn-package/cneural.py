@@ -4,9 +4,9 @@ from numpy.typing import NDArray, DTypeLike, ArrayLike
 
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
-class Layer_Input:
+class LayerInput:
     """
-    Layer_Input class represents the input layer of the neural network.
+    LayerInput class represents the input layer of the neural network.
     """
 
     def forward(self, inputs: ArrayLike, training: bool) -> None: 
@@ -19,7 +19,7 @@ class Layer_Input:
         self.output = np.array(inputs, dtype=np.float64)
 
 
-class Layer_Dense:
+class LayerDense:
     """
     #### what 
         - create Dense Layer 
@@ -78,7 +78,7 @@ class Layer_Dense:
             self.dbiases += 2 * self.bias_regularizer_L2 * self.biases
 
         
-class Layer_Dropout:
+class LayerDropout:
     """
     #### what
         - Dropout is a regularization technique where randomly selected neurons are ignored during training.
@@ -117,7 +117,7 @@ class Accuracy:
         accuracy = np.mean(comparisons)
         return accuracy
     
-class Accuracy_categorical(Accuracy):
+class AccuracyCategorical(Accuracy):
     def init(self, y):
         pass
     def compare(self, predictions, y):
@@ -125,7 +125,7 @@ class Accuracy_categorical(Accuracy):
             y = np.argmax(y, axis=1)
         return predictions == y
 
-class Accuracy_Regression(Accuracy):
+class AccuracyRegression(Accuracy):
     def __init__(self):
         self.precision = None
     def init(self, y, reinit=False):
@@ -134,7 +134,7 @@ class Accuracy_Regression(Accuracy):
     def compare(self, predictions, y):
         return np.absolute(predictions - y) < self.precision
     
-class Activation_ReLU:
+class ActivationReLU:
     """
     #### what
         - introduce non-linearity in the network.
@@ -159,7 +159,7 @@ class Activation_ReLU:
         return outputs
 
 
-class Activation_Softmax:
+class ActivationSoftmax:
     """
     #### what
         - convert raw scores into probabilities. 
@@ -194,7 +194,7 @@ class Activation_Softmax:
         return np.argmax(outputs, axis=1)
 
 
-class Activation_Sigmoid:
+class ActivationSigmoid:
     """
     #### What
         - use primarily in the multi-label classification problem. Each output neurons represents seperate class on its own.
@@ -229,7 +229,7 @@ class Activation_Sigmoid:
         return (outputs > 0.5) * 1
 
 
-class Activation_Linear:
+class ActivationLinear:
     """
     #### what
         - Linear activation function is used to pass the input directly to the output without any modification.
@@ -265,7 +265,7 @@ class Loss:
         - regularization_loss method calculates the regularization loss using layers in self.trainable_layers.
         - calculate method calculates the data loss using child class's forward method and regularization loss from regularization_loss method.
     """
-    def remember_trainable_layers(self, trainable_layers: List[Layer_Dense]) -> None:
+    def remember_trainable_layers(self, trainable_layers: List[LayerDense]) -> None:
         self.trainable_layers = trainable_layers
     
     def regularization_loss(self) -> float:
@@ -299,7 +299,7 @@ class Loss:
         return data_loss, self.regularization_loss()
     
 
-class Loss_CategoricalCrossentropy(Loss):
+class LossCategoricalCrossentropy(Loss):
     """
    #### what
         - Categorical cross-entropy loss function is used in multi-class (3 and more) classification tasks.
@@ -345,7 +345,7 @@ class Loss_CategoricalCrossentropy(Loss):
         self.dinputs = self.dinputs / samples
 
 
-class Activation_Softmax_Loss_CategoricalCrossentropy:
+class ActivationSoftmaxLossCategoricalCrossentropy:
     """
     #### what
         - Softmax classifier is a combination of softmax activation and categorical cross-entropy loss.
@@ -358,8 +358,8 @@ class Activation_Softmax_Loss_CategoricalCrossentropy:
     """
 
     def __init__(self) -> None:
-        self.activation = Activation_Softmax()
-        self.loss = Loss_CategoricalCrossentropy()
+        self.activation = ActivationSoftmax()
+        self.loss = LossCategoricalCrossentropy()
 
     def forward(self, inputs: Float64Array2D, y_true) -> np.float64:
         """
@@ -384,7 +384,7 @@ class Activation_Softmax_Loss_CategoricalCrossentropy:
         self.dinputs[range(samples), y_true] -= 1
         self.dinputs = self.dinputs / samples
 
-class Loss_BinaryCrossentropy(Loss):
+class LossBinaryCrossentropy(Loss):
     """
     #### what
         - Binary cross-entropy loss function is used in binary regression models.
@@ -422,7 +422,7 @@ class Loss_BinaryCrossentropy(Loss):
         self.dinputs /= samples
 
 
-class Loss_MeanSquaredError(Loss):
+class LossMeanSquaredError(Loss):
     """
     #### What
         - Mean squared error(MSE) loss function is used in single or multiple output regression tasks.
@@ -451,7 +451,7 @@ class Loss_MeanSquaredError(Loss):
         self.dinputs = self.dinputs / samples
 
 
-class Loss_MeanAbsoluteError(Loss):
+class LossMeanAbsoluteError(Loss):
     """
     #### What
         - Mean absolute error(MAE) loss function is used in single or multiple output regression tasks.
@@ -485,7 +485,7 @@ class Loss_MeanAbsoluteError(Loss):
         self.dinputs = np.sign(y_true - dvalues) / outputs # np.sign returns -1 (<0) 0 (=0) 1 (>0)
         self.dinputs = self.dinputs / samples
 
-class Optimizer_SGD:
+class OptimizerSGD:
     """
     #### What
         - Stochastic Gradient Descent is the simplest optimizer.
@@ -512,7 +512,7 @@ class Optimizer_SGD:
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations)) # 1/x graph
 
-    def update_params(self, Layer: Layer_Dense) -> None:
+    def update_params(self, Layer: LayerDense) -> None:
         if self.momentum:
             if not hasattr(Layer, "weight_momentums"):
                 Layer.weight_momentums = np.zeros_like(Layer.weights)
@@ -530,7 +530,7 @@ class Optimizer_SGD:
     def post_update_params(self) -> None:
         self.iterations += 1
 
-class Optimizer_Adagrad:
+class OptimizerAdagrad:
     """
     #### What
         - Adagrad optimizer is an adaptive learning rate optimizer. It is not widely used.
@@ -555,7 +555,7 @@ class Optimizer_Adagrad:
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
-    def update_params(self, Layer: Layer_Dense) -> None:
+    def update_params(self, Layer: LayerDense) -> None:
         if not hasattr(Layer, "weight_cache"):
             Layer.weight_cache = np.zeros_like(Layer.weights)
             Layer.bias_cache = np.zeros_like(Layer.biases)
@@ -567,7 +567,7 @@ class Optimizer_Adagrad:
     def post_update_params(self) -> None:
         self.iterations += 1
 
-class Optimizer_RMSprop:
+class OptimizerRMSprop:
     """
     #### What
         - RMSprop optimizer(Adagrad variant) is an adaptive learning rate optimizer. learning does not stall.
@@ -594,7 +594,7 @@ class Optimizer_RMSprop:
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
-    def update_params(self, Layer: Layer_Dense) -> None:
+    def update_params(self, Layer: LayerDense) -> None:
         if not hasattr(Layer, "weight_cache"):
             Layer.weight_cache = np.zeros_like(Layer.weights)
             Layer.bias_cache = np.zeros_like(Layer.biases)
@@ -606,7 +606,7 @@ class Optimizer_RMSprop:
     def post_update_params(self) -> None:
         self.iterations += 1
 
-class Optimizer_Adam:
+class OptimizerAdam:
     """
     #### What
         - Adaptive Moment Estimation optimizer is an adaptive learning rate optimizer. (Momentum L1 moment) + RMSprop (L2 moment)
@@ -632,7 +632,7 @@ class Optimizer_Adam:
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
-    def update_params(self, Layer: Layer_Dense) -> None:
+    def update_params(self, Layer: LayerDense) -> None:
         """
         #### Note
             - first moment:  m_t = beta_1 * m_t-1 + (1 - beta_1) * gradient

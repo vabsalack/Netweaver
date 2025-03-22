@@ -1,5 +1,6 @@
 from cneural import *
 from typing import Union
+
 class Model:
     def __init__(self):
         self.layers = []
@@ -8,13 +9,13 @@ class Model:
     def add(self, layer):
         self.layers.append(layer)
 
-    def set(self, *, loss, optimizer: Union[Optimizer_Adagrad], accuracy):
+    def set(self, *, loss, optimizer: Union[OptimizerAdagrad], accuracy):
         self.loss = loss
         self.optimizer = optimizer
         self.accuracy = accuracy
     
     def finalize(self):
-        self.input_layer = Layer_Input()
+        self.input_layer = LayerInput()
         self.trainable_layers = []
         layer_count = len(self.layers)
 
@@ -27,8 +28,8 @@ class Model:
         self.output_layer_activation = self.layers[layer_count - 1]
         self.loss.remember_trainable_layers(self.trainable_layers)
 
-        if isinstance(self.layers[-1], Activation_Softmax) and isinstance(self.loss, Loss_CategoricalCrossentropy):
-            self.softmax_classifier_output = Activation_Softmax_Loss_CategoricalCrossentropy()
+        if isinstance(self.layers[-1], ActivationSoftmax) and isinstance(self.loss, LossCategoricalCrossentropy):
+            self.softmax_classifier_output = ActivationSoftmaxLossCategoricalCrossentropy()
 
     def train(self, X, y, *, epochs=1, print_every=1, validation_data=None):
 
