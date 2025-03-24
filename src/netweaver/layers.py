@@ -77,6 +77,13 @@ class LayerDense:
         if self.bias_regularizer_L2 > 0:
             self.dbiases += 2 * self.bias_regularizer_L2 * self.biases
 
+    def get_parameters(self):
+        return self.weights, self.biases
+
+    def set_parameters(self, weights, biases):
+        self.weights = weights
+        self.biases = biases
+
 
 class LayerDropout:
     """

@@ -53,9 +53,23 @@ class Loss:
         """
         sample_losses = self.forward(output, y)
         data_loss = np.mean(sample_losses)
+        self.accumulated_sum += np.sum(sample_losses)
+        self.accumulated_count += len(sample_losses)
         if not include_regularization:
             return data_loss
         return data_loss, self.regularization_loss()
+
+    def calculate_accumulated(
+        self, *, include_regularization: bool = False
+    ) -> Union[float, Tuple[np.float64, np.float64]]:
+        data_loss = self.accumulated_sum / self.accumulated_count
+        if not include_regularization:
+            return data_loss
+        return data_loss, self.regularization_loss()
+
+    def new_pass(self) -> None:
+        self.accumulated_sum = 0
+        self.accumulated_count = 0
 
 
 class LossCategoricalCrossentropy(Loss):
