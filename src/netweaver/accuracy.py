@@ -1,4 +1,4 @@
-from netweaver.utils import np
+import numpy as np
 
 
 class Accuracy:

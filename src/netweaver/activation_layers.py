@@ -1,4 +1,8 @@
-from netweaver.utils import Float64Array2D, Tuple, np
+from typing import Tuple
+
+import numpy as np
+
+Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
 
 class ActivationReLU:

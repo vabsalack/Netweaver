@@ -1,12 +1,12 @@
-from netweaver.utils import (
-    ActivationSoftmax,
-    ActivationSoftmaxLossCategoricalCrossentropy,
-    LayerInput,
-    LossCategoricalCrossentropy,
-    copy,
-    np,
-    pickle,
-)
+import copy
+import pickle
+
+import numpy as np
+
+from netweaver.activation_layers import ActivationSoftmax
+from netweaver.layers import LayerInput
+from netweaver.lossfunctions import LossCategoricalCrossentropy
+from netweaver.softmaxCCEloss import ActivationSoftmaxLossCategoricalCrossentropy
 
 
 class Model:

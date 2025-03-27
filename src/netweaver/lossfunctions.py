@@ -1,4 +1,10 @@
-from netweaver.utils import Float64Array2D, LayerDense, List, Tuple, Union, np
+from typing import List, Tuple, Union
+
+import numpy as np
+
+from netweaver.layers import LayerDense
+
+Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
 
 class Loss:
@@ -134,7 +140,7 @@ class LossBinaryCrossentropy(Loss):
         self,
         y_pred: Float64Array2D,
         y_true: np.ndarray[Tuple[int, int], np.dtype[np.int64]],
-    ) -> np.array[Tuple[int], np.dtype[np.float64]]:
+    ) -> np.ndarray[Tuple[int], np.dtype[np.float64]]:
         """
         #### Note
             - Unlike categorical cross-entropy, it measures negative-log-likelihood of each output neurons seperately and **average** them.
@@ -181,7 +187,7 @@ class LossMeanSquaredError(Loss):
 
     def forward(
         self, y_pred: Float64Array2D, y_true: Float64Array2D
-    ) -> np.array[Tuple[int], np.dtype[np.float64]]:
+    ) -> np.ndarray[Tuple[int], np.dtype[np.float64]]:
         sample_losses = np.mean((y_true - y_pred) ** 2, axis=-1)
         return sample_losses
 
@@ -211,7 +217,7 @@ class LossMeanAbsoluteError(Loss):
 
     def forward(
         self, y_pred: Float64Array2D, y_true: Float64Array2D
-    ) -> np.array[Tuple[int], np.dtype[np.float64]]:
+    ) -> np.ndarray[Tuple[int], np.dtype[np.float64]]:
         """
         #### Note
             - loss formula: mean(abs(y_true - y_pred))

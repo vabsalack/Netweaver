@@ -1,9 +1,11 @@
-from netweaver.utils import (
-    ActivationSoftmax,
-    Float64Array2D,
-    LossCategoricalCrossentropy,
-    np,
-)
+from typing import Tuple
+
+import numpy as np
+
+from netweaver.activation_layers import ActivationSoftmax
+from netweaver.lossfunctions import LossCategoricalCrossentropy
+
+Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
 
 class ActivationSoftmaxLossCategoricalCrossentropy:

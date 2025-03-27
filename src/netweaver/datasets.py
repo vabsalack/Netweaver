@@ -1,4 +1,7 @@
-from netweaver.utils import cv2, os, np
+import os
+
+import cv2
+import numpy as np
 
 
 def load_mnist_dataset(dataset, path):
@@ -13,6 +16,7 @@ def load_mnist_dataset(dataset, path):
             X.append(image)
             y.append(lable)
     return np.array(X), np.array(y, dtype=np.int)
+
 
 def create_data_mnist(path):
     X, y = load_mnist_dataset("train", path)

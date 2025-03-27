@@ -1,4 +1,6 @@
-from netweaver.utils import LayerDense, np
+import numpy as np
+
+from netweaver.layers import LayerDense
 
 
 class OptimizerSGD:

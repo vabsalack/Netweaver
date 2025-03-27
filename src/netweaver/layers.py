@@ -1,4 +1,9 @@
-from netweaver.utils import ArrayLike, Float64Array2D, Union, np
+from typing import Tuple, Union
+
+import numpy as np
+from numpy.typing import ArrayLike
+
+Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
 
 class LayerInput:
