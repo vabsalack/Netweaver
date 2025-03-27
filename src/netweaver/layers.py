@@ -36,23 +36,23 @@ class LayerDense:
         self,
         n_inputs: int,
         n_neurons: int,
-        weight_regularizer_L1: Union[float, int] = 0,
-        weight_regularizer_L2: Union[float, int] = 0,
-        bias_regularizer_L1: Union[float, int] = 0,
-        bias_regularizer_L2: Union[float, int] = 0,
+        weight_regularizer_L1: float = .0,
+        weight_regularizer_L2: float = .0,
+        bias_regularizer_L1: float = .0,
+        bias_regularizer_L2: float = .0,
     ) -> None:
         """
         #### Note
             - weights initialization is one of crucial part in model convergence.
         """
-        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
-        self.biases = np.zeros((1, n_neurons))
+        self.weights: Float64Array2D = 0.01 * np.random.randn(n_inputs, n_neurons)
+        self.biases: Float64Array2D = np.zeros((1, n_neurons))
         # L1 strength
-        self.weight_regularizer_L1 = weight_regularizer_L1
-        self.bias_regularizer_L1 = bias_regularizer_L1
+        self.weight_regularizer_L1: float = float(weight_regularizer_L1)
+        self.bias_regularizer_L1: float = float(bias_regularizer_L1)
         # L2 strength
-        self.weight_regularizer_L2 = weight_regularizer_L2
-        self.bias_regularizer_L2 = bias_regularizer_L2
+        self.weight_regularizer_L2:float = float(weight_regularizer_L2)
+        self.bias_regularizer_L2:float = float(bias_regularizer_L2)
 
     def forward(self, inputs: Float64Array2D, training: bool) -> None:
         self.inputs = inputs
