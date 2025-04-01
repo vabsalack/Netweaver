@@ -232,17 +232,19 @@ class OptimizerAdam:
         bias_cache_corrected = Layer.bias_cache / (
             1 - self.beta_2 ** (self.iterations + 1)
         )
-        # params updates
-        Layer.weights += (
+        weight_updates = (
             -self.current_learning_rate
             * weight_momentums_corrected
             / (np.sqrt(weight_cache_corrected) + self.epsilon)
         )
-        Layer.biases += (
+        bias_updates = (
             -self.current_learning_rate
             * bias_momentums_corrected
             / (np.sqrt(bias_cache_corrected) + self.epsilon)
         )
+        # params updates
+        Layer.weights += weight_updates
+        Layer.biases += bias_updates
 
     def post_update_params(self) -> None:
         self.iterations += 1

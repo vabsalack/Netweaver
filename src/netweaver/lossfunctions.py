@@ -50,7 +50,7 @@ class Loss:
         y,  # y type can be one-hot encoded or sparse lables
         *,
         include_regularization: bool = False,
-    ) -> Union[float, Tuple[np.float64, np.float64]]:
+    ) -> Union[np.float64, Tuple[np.float64, np.float64]]:
         """
         #### Note
             - data loss is the mean of sample losses
@@ -106,7 +106,7 @@ class LossCategoricalCrossentropy(Loss):
         if len(y_true.shape) == 1:
             correct_confidences = y_pred_clipped[range(samples), y_true]
         elif len(y_true.shape) == 2:
-            correct_confidences = np.sum(y_pred_clipped * y_true, axis=1)
+            correct_confidences = np.sum(y_pred_clipped * y_true, axis=1, keepdims=False)
         negative_log_likelihoods = -np.log(correct_confidences)
         return negative_log_likelihoods
 
@@ -150,7 +150,7 @@ class LossBinaryCrossentropy(Loss):
         sample_losses = -(
             y_true * np.log(y_pred_clipped) + (1 - y_true) * np.log(1 - y_pred_clipped)
         )
-        sample_losses = np.mean(sample_losses, axis=-1)
+        sample_losses = np.mean(sample_losses, axis=1)
         return sample_losses
 
     def backward(
@@ -228,12 +228,13 @@ class LossMeanAbsoluteError(Loss):
     def backward(self, dvalues: Float64Array2D, y_true: Float64Array2D) -> None:
         """
         #### Note
-            - ∂L/∂y^ = sign(y_true - y_pred) / outputs = for one of predicted outputs in a sample.
+            - ∂L/∂y^ = -sign(y_true - y_pred) / outputs = for one of predicted outputs in a sample.
+            - It's negative of sign(y_true - y_pred), graph of y_pred > y_true is +1 and y_pred < y_true is -1
             - normalize the gradient by the number of samples in the batch.
         """
         samples = len(dvalues)
         outputs = len(dvalues[0])
         self.dinputs = (
-            np.sign(y_true - dvalues) / outputs
+            -np.sign(y_true - dvalues) / outputs
         )  # np.sign returns -1 (<0) 0 (=0) 1 (>0)
         self.dinputs = self.dinputs / samples

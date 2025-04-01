@@ -63,6 +63,8 @@ class LayerDense:
         #### Note
         - compute gradients.
         - apply regularization to computed gradients.
+        - the derivative of the absolute value is 1 for 0 and positive values, and -1 for negative values.
+        - In math, d(abs(x))/dx = undefined for x=0. In applied code, d(abs(x))/dx = 1 for x=0. 
         """
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)

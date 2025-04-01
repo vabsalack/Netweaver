@@ -18,7 +18,7 @@ class ActivationReLU:
 
     def forward(self, inputs: Float64Array2D, training: bool) -> None:
         self.inputs = inputs
-        self.output = np.maximum(0, inputs)
+        self.output = np.maximum(0, self.inputs)
 
     def backward(self, dvalues: Float64Array2D) -> None:
         self.dinputs = dvalues.copy()
@@ -42,7 +42,7 @@ class ActivationSoftmax:
 
     def forward(self, inputs: Float64Array2D, training: bool) -> None:
         self.inputs = inputs
-        exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
+        exp_values = np.exp(inputs - np.max(self.inputs, axis=1, keepdims=True))
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
         self.output = probabilities
 
