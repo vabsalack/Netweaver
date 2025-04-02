@@ -1,0 +1,4 @@
+[lint]
+exclude = [
+    "src/netweaver/_internal_utils.py"
+]
