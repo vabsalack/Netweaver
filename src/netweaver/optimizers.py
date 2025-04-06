@@ -1,6 +1,7 @@
 import numpy as np
 
 from netweaver.layers import LayerDense
+from typing import Union
 
 
 class OptimizerSGD:
@@ -54,6 +55,7 @@ class OptimizerSGD:
         Layer.biases += bias_updates
 
     def post_update_params(self) -> None:
+        """Increments the iteration counter."""
         self.iterations += 1
 
 
@@ -79,6 +81,7 @@ class OptimizerAdagrad:
         self.epsilon = epsilon
 
     def pre_update_params(self) -> None:
+        """Updates the learning rate based on the decay parameter."""
         if self.decay:
             self.current_learning_rate = self.learning_rate * (
                 1.0 / (1.0 + self.decay * self.iterations)
@@ -102,6 +105,7 @@ class OptimizerAdagrad:
         )
 
     def post_update_params(self) -> None:
+        """Increments the iteration counter."""
         self.iterations += 1
 
 
@@ -132,6 +136,7 @@ class OptimizerRMSprop:
         self.beta = beta
 
     def pre_update_params(self) -> None:
+        """Updates the learning rate based on the decay parameter."""
         if self.decay:
             self.current_learning_rate = self.learning_rate * (
                 1.0 / (1.0 + self.decay * self.iterations)
@@ -159,16 +164,16 @@ class OptimizerRMSprop:
         )
 
     def post_update_params(self) -> None:
+        """Increments the iteration counter."""
         self.iterations += 1
 
 
 class OptimizerAdam:
-    """
-    #### What
-        - Adaptive Moment Estimation optimizer is an adaptive learning rate optimizer. (Momentum L1 moment) + RMSprop (L2 moment)
-        - It is robust to noisy gradients and sparse gradients
-    #### Flow
-        - [init -> (pre_update_params -> update_params -> post_update_params)]
+    """Implements the Adam optimization algorithm.
+
+    Adam combines the benefits of both momentum and RMSprop.
+    It uses moving averages of the gradient and its squared value to adapt the learning rate for each parameter.
+    Adam is known for its efficiency and effectiveness in a wide range of optimization problems.  It is less prone to getting stuck in local minima and handles noisy/sparse gradients well.
     """
 
     def __init__(
@@ -179,6 +184,21 @@ class OptimizerAdam:
         beta_1: float = 0.9,
         beta_2: float = 0.999,
     ) -> None:
+        """Initializes the Adam optimizer.
+
+        Parameters
+        ----------
+        learning_rate : float, optional
+            The initial learning rate, by default 0.001.
+        decay : float, optional
+            The learning rate decay factor, by default 0.0.
+        epsilon : float, optional
+            A small value to prevent division by zero, by default 1e-7.
+        beta_1 : float, optional
+            The exponential decay rate for the first moment estimates, by default 0.9.
+        beta_2 : float, optional
+            The exponential decay rate for the second moment estimates, by default 0.999.
+        """
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -188,19 +208,29 @@ class OptimizerAdam:
         self.beta_2 = beta_2
 
     def pre_update_params(self) -> None:
+        """Updates the learning rate based on the decay parameter."""
         if self.decay:
             self.current_learning_rate = self.learning_rate * (
                 1.0 / (1.0 + self.decay * self.iterations)
             )
 
     def update_params(self, Layer: LayerDense) -> None:
+        """Updates the layer's parameters using the Adam algorithm.
+
+        Uses moving averages of the gradient (first moment) and its squared value (second moment)
+        to adapt the learning rate for each parameter.  Bias correction is applied to the
+        moment estimates to account for their initialization at zero.
+
+        - first moment:  m_t = beta_1 * m_t-1 + (1 - beta_1) * gradient
+        - second moment: v_t = beta_2 * v_t-1 + (1 - beta_2) * gradient^2
+        - params update: w_t = w_t-1 - lr * m_t / (sqrt(v_t) + epsilon)
+
+        Parameters
+        ----------
+        layer : LayerDense
+            The layer whose parameters to update.
         """
-        #### Note
-            - first moment:  m_t = beta_1 * m_t-1 + (1 - beta_1) * gradient
-            - second moment: v_t = beta_2 * v_t-1 + (1 - beta_2) * gradient^2
-            - params update: w_t = w_t-1 - lr * m_t / (sqrt(v_t) + epsilon)
-            - bias correction in inital stages, the first and second moments are biased towards zero.
-        """
+
         if not hasattr(Layer, "weight_cache"):
             Layer.weight_momentums = np.zeros_like(Layer.weights)
             Layer.bias_momentums = np.zeros_like(Layer.biases)
@@ -247,4 +277,8 @@ class OptimizerAdam:
         Layer.biases += bias_updates
 
     def post_update_params(self) -> None:
+        """Increments the iteration counter."""
         self.iterations += 1
+
+
+OptimizerTypes = Union[OptimizerAdagrad, OptimizerAdam, OptimizerRMSprop, OptimizerSGD]

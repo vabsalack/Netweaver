@@ -2,6 +2,8 @@ from typing import Tuple
 
 import numpy as np
 
+from typing import Union
+
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
 
@@ -58,7 +60,7 @@ class ActivationSoftmax:
             single_output = single_output.reshape(-1, 1)
             jacobian_matrix = np.diagflat(single_output) - np.dot(
                 single_output, single_output.T
-            )
+            ) # here the jacobian is square and symmentrix matrix
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
     def predictions(
@@ -123,3 +125,5 @@ class ActivationLinear:
 
     def predictions(self, outputs: Float64Array2D) -> Float64Array2D:
         return outputs
+
+ActivationTypes = Union[ActivationSoftmax, ActivationLinear, ActivationReLU, ActivationSigmoid]

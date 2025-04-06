@@ -23,48 +23,70 @@ class LayerInput:
 
 class LayerDense:
     """
-    #### what
-        - create Dense Layer
-        - args: nintputs, nneurons, wL1, wL2, bL1, bL2
-    #### Improve
-        - experiment with other initialization method such as he, xavier, etc.
-    #### Flow
-        - [init -> (forward -> backward)]
+    A dense layer implementation.
+
+    This layer performs a linear transformation of the input data followed by a bias addition.
+    It supports L1 and L2 regularization for both weights and biases.
     """
 
     def __init__(
         self,
         n_inputs: int,
         n_neurons: int,
-        weight_regularizer_L1: float = .0,
-        weight_regularizer_L2: float = .0,
-        bias_regularizer_L1: float = .0,
-        bias_regularizer_L2: float = .0,
+        weight_regularizer_L1: float = 0.0,
+        weight_regularizer_L2: float = 0.0,
+        bias_regularizer_L1: float = 0.0,
+        bias_regularizer_L2: float = 0.0,
     ) -> None:
         """
-        #### Note
-            - weights initialization is one of crucial part in model convergence.
+        Initializes the dense layer with random weights and zero biases.
+
+        Parameters
+        ----------
+        n_inputs : int
+            Number of input features
+        n_neurons : int
+            Number of neurons in the layer
+        weight_regularizer_L1 : float, default=0.0
+            L1 regularization strength for weights
+        weight_regularizer_L2 : float, default=0.0
+            L2 regularization strength for weights
+        bias_regularizer_L1 : float, default=0.0
+            L1 regularization strength for biases
+        bias_regularizer_L2 : float, default=0.0
+            L2 regularization strength for biases
         """
         self.weights: Float64Array2D = 0.01 * np.random.randn(n_inputs, n_neurons)
         self.biases: Float64Array2D = np.zeros((1, n_neurons))
         # L1 strength
-        self.weight_regularizer_L1: float = float(weight_regularizer_L1)
-        self.bias_regularizer_L1: float = float(bias_regularizer_L1)
+        self.weight_regularizer_L1: float = weight_regularizer_L1
+        self.bias_regularizer_L1: float = bias_regularizer_L1
         # L2 strength
-        self.weight_regularizer_L2:float = float(weight_regularizer_L2)
-        self.bias_regularizer_L2:float = float(bias_regularizer_L2)
+        self.weight_regularizer_L2: float = weight_regularizer_L2
+        self.bias_regularizer_L2: float = bias_regularizer_L2
 
     def forward(self, inputs: Float64Array2D, training: bool) -> None:
+        """Performs the forward pass of the dense layer.
+
+        Parameters
+        ----------
+        inputs : numpy.ndarray
+            Input data.
+        training : bool
+            Whether the layer is in training mode (unused in this layer).
+        """
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
 
     def backward(self, dvalues: Float64Array2D) -> None:
-        """
-        #### Note
-        - compute gradients.
-        - apply regularization to computed gradients.
-        - the derivative of the absolute value is 1 for 0 and positive values, and -1 for negative values.
-        - In math, d(abs(x))/dx = undefined for x=0. In applied code, d(abs(x))/dx = 1 for x=0. 
+        """Performs the backward pass of the dense layer and computes the dweights, dbiases and dinputs.
+        This method also incoporates L1 and L2 regularization to the computed gradients.  
+        Here the derivate of Absolute function is consider **1 for 0** and positive values, and -1 for negative values.
+
+        Parameters
+        ----------
+        dvalues : numpy.ndarray
+            Gradients of the loss with respect to the layer's output.
         """
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
@@ -84,10 +106,26 @@ class LayerDense:
         if self.bias_regularizer_L2 > 0:
             self.dbiases += 2 * self.bias_regularizer_L2 * self.biases
 
-    def get_parameters(self):
+    def get_parameters(self) -> Tuple[Float64Array2D, Float64Array2D]:
+        """Returns the layer's parameters (weights and biases).
+
+        Returns
+        -------
+        tuple
+            A tuple containing the weights and biases.
+        """
         return self.weights, self.biases
 
     def set_parameters(self, weights, biases):
+        """Sets the layer's parameters (weights and biases).
+
+        Parameters
+        ----------
+        weights : numpy.ndarray
+            Weights to set.
+        biases : numpy.ndarray
+            Biases to set.
+        """
         self.weights = weights
         self.biases = biases
 
@@ -124,3 +162,7 @@ class LayerDropout:
 
     def backward(self, dvalues: Float64Array2D) -> None:
         self.dinputs = dvalues * self.binary_mask
+
+
+LayerTypes = Union[LayerDense, LayerDropout]
+TrainableLayerTypes = LayerDense

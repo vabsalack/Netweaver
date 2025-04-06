@@ -2,7 +2,7 @@ from typing import List, Tuple, Union
 
 import numpy as np
 
-from netweaver.layers import LayerDense
+from netweaver.layers import TrainableLayerTypes
 
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
@@ -20,7 +20,9 @@ class Loss:
         - calculate method calculates the data loss using child class's forward method and regularization loss from regularization_loss method.
     """
 
-    def remember_trainable_layers(self, trainable_layers: List[LayerDense]) -> None:
+    def remember_trainable_layers(
+        self, trainable_layers: List[TrainableLayerTypes]
+    ) -> None:
         self.trainable_layers = trainable_layers
 
     def regularization_loss(self) -> float:
@@ -79,46 +81,58 @@ class Loss:
 
 
 class LossCategoricalCrossentropy(Loss):
-    """
-    #### what
-         - Categorical cross-entropy loss function is used in multi-class (3 and more) classification tasks.
-         - It's the negative-log-likelihood of likelihood function
-         - use to find the MLE (Maximum Likelihood Estimation) of the model.
-     #### Improve
-     #### Flow
-         - [forward -> backward]
-         - formula: -sum(y_true * log(y_pred))
+    """Implements the categorical cross-entropy loss function, commonly used for multi-class classification tasks. 
+    This loss function measures the dissimilarity between the predicted probability distribution and the true 
+    distribution by calculating the negative log-likelihood of the true class probabilities given the predicted 
+    probabilities. It is minimized when the predicted probabilities align closely with the true labels, effectively 
+    finding the Maximum Likelihood Estimation (MLE) of the model. This class provides methods for both forward 
+    computation of the loss and backward computation of the gradient for optimization purposes.
     """
 
     def forward(
-        self, y_pred: Float64Array2D, y_true
-    ) -> np.ndarray[
-        Tuple[int], np.dtype[np.float64]
-    ]:  # y_true type can be one-hot encoded or sparse lables
-        """
-        #### Note
-            - clips the predicted values to prevent division by zero, log of zero is undefined (p.log(1e-323)=-inf) and derivate of log(x) is 1/x precision overflows.
-            - clips both sides to not drag mean towards any value
-            - computes the negative log likelihood of only the correct class probabilities. -( 0.log(x.x) + 1.log(x.x) + 0.log(x.x) + 0.log(x.x) )
+        self, y_pred: Float64Array2D, y_true: np.ndarray
+    ) -> np.ndarray[Tuple[int], np.dtype[np.float64]]:
+        # sourcery skip: inline-immediately-returned-variable
+        """Calculates the categorical cross-entropy loss.
+        Clips the predicted values to prevent division by zero.
+        Clips both sides to not drag mean towards any value.
+
+        Parameters
+        ----------
+        y_pred : numpy.ndarray
+            Predicted probabilities.
+        y_true : numpy.ndarray
+            True labels, either one-hot encoded or as a vector of integers.
+
+        Returns
+        -------
+        numpy.ndarray
+            The negative log-likelihoods for each sample.
         """
         samples = len(y_pred)
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
         if len(y_true.shape) == 1:
             correct_confidences = y_pred_clipped[range(samples), y_true]
         elif len(y_true.shape) == 2:
-            correct_confidences = np.sum(y_pred_clipped * y_true, axis=1, keepdims=False)
+            correct_confidences = np.sum(
+                y_pred_clipped * y_true, axis=1, keepdims=False
+            )
         negative_log_likelihoods = -np.log(correct_confidences)
         return negative_log_likelihoods
 
-    def backward(self, dvalues: Float64Array2D, y_true) -> None:
-        """
-        #### Note
-            - Expects y_true to be one-hot encoded.
-            - **normalizes the gradient by the number of samples.**
+    def backward(self, dvalues: Float64Array2D, y_true: np.ndarray) -> None:
+        """Calculates the gradient of the categorical cross-entropy loss and normalizes it by the number of samples.
+
+        Parameters
+        ----------
+        dvalues : numpy.ndarray
+            Predicted probabilities.
+        y_true : numpy.ndarray
+            True labels, either one-hot encoded or as a vector of integers.
         """
         samples = len(dvalues)
-        labels = len(dvalues[0])
         if len(y_true.shape) == 1:
+            labels = len(dvalues[0])
             y_true = np.eye(labels)[y_true]
 
         self.dinputs = -y_true / dvalues
@@ -188,6 +202,7 @@ class LossMeanSquaredError(Loss):
     def forward(
         self, y_pred: Float64Array2D, y_true: Float64Array2D
     ) -> np.ndarray[Tuple[int], np.dtype[np.float64]]:
+        # sourcery skip: inline-immediately-returned-variable
         sample_losses = np.mean((y_true - y_pred) ** 2, axis=-1)
         return sample_losses
 
@@ -218,6 +233,7 @@ class LossMeanAbsoluteError(Loss):
     def forward(
         self, y_pred: Float64Array2D, y_true: Float64Array2D
     ) -> np.ndarray[Tuple[int], np.dtype[np.float64]]:
+        # sourcery skip: inline-immediately-returned-variable
         """
         #### Note
             - loss formula: mean(abs(y_true - y_pred))
@@ -238,3 +254,11 @@ class LossMeanAbsoluteError(Loss):
             -np.sign(y_true - dvalues) / outputs
         )  # np.sign returns -1 (<0) 0 (=0) 1 (>0)
         self.dinputs = self.dinputs / samples
+
+
+LossTypes = Union[
+    LossBinaryCrossentropy,
+    LossCategoricalCrossentropy,
+    LossMeanSquaredError,
+    LossMeanAbsoluteError,
+]
