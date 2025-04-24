@@ -13,6 +13,8 @@ from netweaver.softmaxCCEloss import ActivationSoftmaxLossCategoricalCrossentrop
 from netweaver.accuracy import AccuracyTypes
 from netweaver.optimizers import OptimizerTypes
 
+from tqdm.auto import tqdm
+
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
 
@@ -181,11 +183,11 @@ class Model:
             if train_steps * batch_size < len(X):
                 train_steps += 1
 
-        for epoch in range(1, epochs + 1):
+        for epoch in tqdm(range(1, epochs + 1), desc="Traning..."):
             self.loss.new_pass()  # for accumulated sum and count to compute loss over an epoch
             self.accuracy.new_pass()  # for accumulated sum and count for accuracies
 
-            for step in range(train_steps):
+            for step in tqdm(range(train_steps), desc=f"Epoch {epoch}", leave=False):
                 # Get the current batch
                 if batch_size is None:
                     batch_X = X
