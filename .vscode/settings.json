@@ -17,7 +17,7 @@
         "editor.defaultFormatter": "vscode.json-language-features"
     },
     // EXPLORER SETTINGS
-    // "explorer.autoReveal": true,
+    "explorer.autoReveal": true,
     // WORKBENCH SETTINGS
     "workbench.colorTheme": "Dracula Theme",
     "workbench.editor.enablePreview": false,
@@ -26,7 +26,10 @@
     // "terminal.integrated.tabs.enabled": true,
     // "terminal.integrated.tabs.hideCondition": "never",
     // "terminal.integrated.tabs.location": "right",
-    "terminal.integrated.fontFamily": "MesloLGS NF"
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.minimumContrastRatio": 5,
+    "terminal.integrated.fontSize": 15,
+    "terminal.integrated.fontFamily": "MesloLGS NF",
     // MARKDOWN SETTINGS
     // "markdown.preview.scrollEditorWithPreview": true,
     // "markdown.preview.scrollPreviewWithEditor": true,
