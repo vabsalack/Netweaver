@@ -28,7 +28,7 @@
     "UV_PYTHON": "3.13.3", // uv python version
     "UV_CACHE_DIR": "/home/USER_NETWEAVER/project_netweaver/.cache/uv-cache"
   },
-  "postCreateCommand": "uv lock && uv lock --upgrade && uv sync && sh .devcontainer/update_zshrc.sh && sh .venv/bin/activate",
+  "postCreateCommand": "sh .devcontainer/update_zshrc.sh && uv lock && uv lock --upgrade && uv sync && sh .venv/bin/activate",
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/USER_NETWEAVER/project_netweaver/,type=bind",
   "workspaceFolder": "/home/USER_NETWEAVER/project_netweaver/"
 }
