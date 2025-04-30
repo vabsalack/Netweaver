@@ -32,19 +32,20 @@ exclude = [
     "build",
     "dist",
 ]
-line-length = 88
+line-length = 150 # Ensure this matches your desired line length
 indent-width = 4
 
 [lint]
-select = ["E1", "E2", "E3", "E4", "E5", "E7", "E9", "W1", "W2" , "W3", "W5", "W5", "W6", "F"]
-ignore = []
+select = ["E", "W", "F", "NPY", "I", "N", "RET", "Q", "PT"]
 fixable = ["ALL"]
-unfixable = []
+ignore = []                                                 # Ensure E501 is included in the fixable list
 
 [format]
-quote-style = "double"
+docstring-code-format = false
+docstring-code-line-length = 88   # Set this to match the line-length
+exclude = []
 indent-style = "space"
-skip-magic-trailing-comma = false
 line-ending = "auto"
-docstring-code-format = true
-docstring-code-line-length = "dynamic"
+preview = false
+quote-style = "double"
+skip-magic-trailing-comma = false

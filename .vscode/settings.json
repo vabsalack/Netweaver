@@ -30,6 +30,12 @@
     "terminal.integrated.minimumContrastRatio": 5,
     "terminal.integrated.fontSize": 15,
     "terminal.integrated.fontFamily": "MesloLGS NF",
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml"
+    },
+    "python.analysis.extraPaths": [
+        "./src"
+    ],
     // MARKDOWN SETTINGS
     // "markdown.preview.scrollEditorWithPreview": true,
     // "markdown.preview.scrollPreviewWithEditor": true,
