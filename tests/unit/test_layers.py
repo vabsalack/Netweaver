@@ -41,7 +41,7 @@ def test_data_layer():  # uses np.random.seed(42)
             ]
         ),  # Shape (3, 4)
         "expected_dweights_shape": (3, 4),
-        "expected_dbiases_value": np.array([[6.0, 8.0, 10.0, 12.0]]),  # Shape (1, 4) 
+        "expected_dbiases_value": np.array([[6.0, 8.0, 10.0, 12.0]]),  # Shape (1, 4)
         "expected_dbiases_shape": (1, 4),
         "expected_dinputs_value": np.array(
             [
@@ -61,7 +61,7 @@ def test_data_layer():  # uses np.random.seed(42)
                 [32.99, 42.01, 50.99, 59.99],
             ]
         ),
-        "expected_dbiases_l1_value": np.array([[6.02, 8.02, 10.02, 12.02]]), # biases is [0, 0, 0, 0], d(abs(0)) = 1
+        "expected_dbiases_l1_value": np.array([[6.02, 8.02, 10.02, 12.02]]),  # biases is [0, 0, 0, 0], d(abs(0)) = 1
         "expected_dweights_l2_value": np.array(
             [
                 [21.00029803, 25.99991704, 31.00038861, 36.00091382],
@@ -77,9 +77,7 @@ def test_data_layer():  # uses np.random.seed(42)
                 [-0.02858224, 0.02188026, 0.11009017, 0.0],
             ]
         ),
-        "expected_dropout_dinputs_value": np.array(
-            [[1.42857143, 0.0, 0.0, 5.71428571], [7.14285714, 8.57142857, 10.0, 0.0]]
-        ),
+        "expected_dropout_dinputs_value": np.array([[1.42857143, 0.0, 0.0, 5.71428571], [7.14285714, 8.57142857, 10.0, 0.0]]),
     }
     return test_dict
 
@@ -124,8 +122,7 @@ def test_layer_dense_weights_and_biases_shape(test_data_layer):
 
     # Check the shape of biases
     assert layer.biases.shape == test_data_layer.get("expected_biases_shape"), (
-        f"Expected biases shape to be {test_data_layer.get('expected_biases_shape')}, "
-        f"but got {layer.biases.shape}"
+        f"Expected biases shape to be {test_data_layer.get('expected_biases_shape')}, but got {layer.biases.shape}"
     )
 
 
@@ -155,8 +152,7 @@ def test_layer_dense_forward(test_data_layer):
 
     # Check output shape
     assert layer.output.shape == test_data_layer.get("expected_output_shape"), (
-        f"Expected output shape to be {test_data_layer.get('expected_output_shape')}, "
-        f"but got {layer.output.shape}"
+        f"Expected output shape to be {test_data_layer.get('expected_output_shape')}, but got {layer.output.shape}"
     )
 
 
@@ -189,8 +185,7 @@ def test_layer_dense_backward(test_data_layer):
     )
 
     assert layer.dweights.shape == test_data_layer.get("expected_dweights_shape"), (
-        f"Expected dweights shape to be {test_data_layer.get('expected_dweights_shape')}, "
-        f"but got {layer.dweights.shape}"
+        f"Expected dweights shape to be {test_data_layer.get('expected_dweights_shape')}, but got {layer.dweights.shape}"
     )
 
     # Check dbiases
@@ -202,8 +197,7 @@ def test_layer_dense_backward(test_data_layer):
     )
 
     assert layer.dbiases.shape == test_data_layer.get("expected_dbiases_shape"), (
-        f"Expected dbiases shape to be {test_data_layer.get('expected_dbiases_shape')}, "
-        f"but got {layer.dbiases.shape}"
+        f"Expected dbiases shape to be {test_data_layer.get('expected_dbiases_shape')}, but got {layer.dbiases.shape}"
     )
 
     # Check dinputs
@@ -215,8 +209,7 @@ def test_layer_dense_backward(test_data_layer):
     )
 
     assert layer.dinputs.shape == test_data_layer.get("expected_dinputs_shape"), (
-        f"Expected dinputs shape to be {test_data_layer.get('expected_dinputs_shape')}, "
-        f"but got {layer.dinputs.shape}"
+        f"Expected dinputs shape to be {test_data_layer.get('expected_dinputs_shape')}, but got {layer.dinputs.shape}"
     )
 
 
@@ -233,12 +226,8 @@ def test_layer_dense_l1_regularization(test_data_layer):
     layer = LayerDense(
         n_inputs=test_data_layer.get("n_inputs"),
         n_neurons=test_data_layer.get("n_neurons"),
-        weight_regularizer_L1=test_data_layer.get(
-            "l1_weights_strength"
-        ),  # L1 regularization for weights
-        bias_regularizer_L1=test_data_layer.get(
-            "l1_biases_strength"
-        ),  # L1 regularization for biases
+        weight_regularizer_l1=test_data_layer.get("l1_weights_strength"),  # L1 regularization for weights
+        bias_regularizer_l1=test_data_layer.get("l1_biases_strength"),  # L1 regularization for biases
     )
 
     # Perform forward pass (required before backward pass)
@@ -279,12 +268,8 @@ def test_layer_dense_l2_regularization(test_data_layer):
     layer = LayerDense(
         n_inputs=test_data_layer.get("n_inputs"),
         n_neurons=test_data_layer.get("n_neurons"),
-        weight_regularizer_L2=test_data_layer.get(
-            "l2_weights_strength"
-        ),  # L2 regularization for weights
-        bias_regularizer_L2=test_data_layer.get(
-            "l2_biases_strength"
-        ),  # L2 regularization for biases
+        weight_regularizer_l2=test_data_layer.get("l2_weights_strength"),  # L2 regularization for weights
+        bias_regularizer_l2=test_data_layer.get("l2_biases_strength"),  # L2 regularization for biases
     )
 
     # Perform forward pass (required before backward pass)

@@ -1,6 +1,7 @@
+from typing import Union
+
 import numpy as np
 
-from typing import Union
 
 class Accuracy:
     def calculate(self, predictions, y):
@@ -45,6 +46,7 @@ class AccuracyCategorical(Accuracy):
 
     Used for classification tasks where predictions are categorical labels.  Compares predicted labels to true labels to determine accuracy.
     """
+
     def init(self, y):
         """Dummy method for compatibility with the AccuracyRegression class in model's workflow.
 
@@ -80,6 +82,7 @@ class AccuracyRegression(Accuracy):
 
     Used for regression tasks where predictions are continuous values.  Compares predicted values to true values within a certain precision.
     """
+
     def __init__(self):
         """Initializes the AccuracyRegression object with precision set to None."""
         self.precision = None
@@ -113,5 +116,6 @@ class AccuracyRegression(Accuracy):
             A boolean array indicating whether each prediction is within the precision range.
         """
         return np.absolute(predictions - y) < self.precision
-    
+
+
 AccuracyTypes = Union[AccuracyCategorical, AccuracyRegression]

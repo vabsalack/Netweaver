@@ -1,7 +1,8 @@
+from typing import Union
+
 import numpy as np
 
 from netweaver.layers import LayerDense
-from typing import Union
 
 
 class OptimizerSGD:
@@ -18,9 +19,7 @@ class OptimizerSGD:
         - [init -> (pre_update_params -> update_params -> post_update_params)]
     """
 
-    def __init__(
-        self, learning_rate: float = 1.0, decay: float = 0.0, momentum: float = 0.0
-    ) -> None:
+    def __init__(self, learning_rate: float = 1.0, decay: float = 0.0, momentum: float = 0.0) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -29,30 +28,22 @@ class OptimizerSGD:
 
     def pre_update_params(self):
         if self.decay:
-            self.current_learning_rate = self.learning_rate * (
-                1.0 / (1.0 + self.decay * self.iterations)
-            )  # 1/x graph
+            self.current_learning_rate = self.learning_rate * (1.0 / (1.0 + self.decay * self.iterations))  # 1/x graph
 
-    def update_params(self, Layer: LayerDense) -> None:
+    def update_params(self, layer: LayerDense) -> None:
         if self.momentum:
-            if not hasattr(Layer, "weight_momentums"):
-                Layer.weight_momentums = np.zeros_like(Layer.weights)
-                Layer.bias_momentums = np.zeros_like(Layer.biases)
-            weight_updates = (
-                self.momentum * Layer.weight_momentums
-                - self.current_learning_rate * Layer.dweights
-            )
-            Layer.weight_momentums = weight_updates
-            bias_updates = (
-                self.momentum * Layer.bias_momentums
-                - self.current_learning_rate * Layer.dbiases
-            )
-            Layer.bias_momentums = bias_updates
+            if not hasattr(layer, "weight_momentums"):
+                layer.weight_momentums = np.zeros_like(layer.weights)
+                layer.bias_momentums = np.zeros_like(layer.biases)
+            weight_updates = self.momentum * layer.weight_momentums - self.current_learning_rate * layer.dweights
+            layer.weight_momentums = weight_updates
+            bias_updates = self.momentum * layer.bias_momentums - self.current_learning_rate * layer.dbiases
+            layer.bias_momentums = bias_updates
         else:  # Vanilla SGD updates (as before momentum update)
-            weight_updates = -self.current_learning_rate * Layer.dweights
-            bias_updates = -self.current_learning_rate * Layer.dbiases
-        Layer.weights += weight_updates
-        Layer.biases += bias_updates
+            weight_updates = -self.current_learning_rate * layer.dweights
+            bias_updates = -self.current_learning_rate * layer.dbiases
+        layer.weights += weight_updates
+        layer.biases += bias_updates
 
     def post_update_params(self) -> None:
         """Increments the iteration counter."""
@@ -71,9 +62,7 @@ class OptimizerAdagrad:
         - formula: lr = lr / (sqrt(cache) + epsilon)
     """
 
-    def __init__(
-        self, learning_rate: float = 1.0, decay: float = 0.0, epsilon: float = 1e-7
-    ) -> None:
+    def __init__(self, learning_rate: float = 1.0, decay: float = 0.0, epsilon: float = 1e-7) -> None:
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -83,26 +72,16 @@ class OptimizerAdagrad:
     def pre_update_params(self) -> None:
         """Updates the learning rate based on the decay parameter."""
         if self.decay:
-            self.current_learning_rate = self.learning_rate * (
-                1.0 / (1.0 + self.decay * self.iterations)
-            )
+            self.current_learning_rate = self.learning_rate * (1.0 / (1.0 + self.decay * self.iterations))
 
-    def update_params(self, Layer: LayerDense) -> None:
-        if not hasattr(Layer, "weight_cache"):
-            Layer.weight_cache = np.zeros_like(Layer.weights)
-            Layer.bias_cache = np.zeros_like(Layer.biases)
-        Layer.weight_cache += Layer.dweights**2
-        Layer.bias_cache += Layer.dbiases**2
-        Layer.weights += (
-            -self.current_learning_rate
-            * Layer.dweights
-            / (np.sqrt(Layer.weight_cache) + self.epsilon)
-        )
-        Layer.biases += (
-            -self.current_learning_rate
-            * Layer.dbiases
-            / (np.sqrt(Layer.bias_cache) + self.epsilon)
-        )
+    def update_params(self, layer: LayerDense) -> None:
+        if not hasattr(layer, "weight_cache"):
+            layer.weight_cache = np.zeros_like(layer.weights)
+            layer.bias_cache = np.zeros_like(layer.biases)
+        layer.weight_cache += layer.dweights**2
+        layer.bias_cache += layer.dbiases**2
+        layer.weights += -self.current_learning_rate * layer.dweights / (np.sqrt(layer.weight_cache) + self.epsilon)
+        layer.biases += -self.current_learning_rate * layer.dbiases / (np.sqrt(layer.bias_cache) + self.epsilon)
 
     def post_update_params(self) -> None:
         """Increments the iteration counter."""
@@ -138,30 +117,16 @@ class OptimizerRMSprop:
     def pre_update_params(self) -> None:
         """Updates the learning rate based on the decay parameter."""
         if self.decay:
-            self.current_learning_rate = self.learning_rate * (
-                1.0 / (1.0 + self.decay * self.iterations)
-            )
+            self.current_learning_rate = self.learning_rate * (1.0 / (1.0 + self.decay * self.iterations))
 
-    def update_params(self, Layer: LayerDense) -> None:
-        if not hasattr(Layer, "weight_cache"):
-            Layer.weight_cache = np.zeros_like(Layer.weights)
-            Layer.bias_cache = np.zeros_like(Layer.biases)
-        Layer.weight_cache = (
-            self.beta * Layer.weight_cache + (1 - self.beta) * Layer.dweights**2
-        )
-        Layer.bias_cache += (
-            self.beta * Layer.bias_cache + (1 - self.beta) * Layer.dbiases**2
-        )
-        Layer.weights += (
-            -self.current_learning_rate
-            * Layer.dweights
-            / (np.sqrt(Layer.weight_cache) + self.epsilon)
-        )
-        Layer.biases += (
-            -self.current_learning_rate
-            * Layer.dbiases
-            / (np.sqrt(Layer.bias_cache) + self.epsilon)
-        )
+    def update_params(self, layer: LayerDense) -> None:
+        if not hasattr(layer, "weight_cache"):
+            layer.weight_cache = np.zeros_like(layer.weights)
+            layer.bias_cache = np.zeros_like(layer.biases)
+        layer.weight_cache = self.beta * layer.weight_cache + (1 - self.beta) * layer.dweights**2
+        layer.bias_cache += self.beta * layer.bias_cache + (1 - self.beta) * layer.dbiases**2
+        layer.weights += -self.current_learning_rate * layer.dweights / (np.sqrt(layer.weight_cache) + self.epsilon)
+        layer.biases += -self.current_learning_rate * layer.dbiases / (np.sqrt(layer.bias_cache) + self.epsilon)
 
     def post_update_params(self) -> None:
         """Increments the iteration counter."""
@@ -173,7 +138,8 @@ class OptimizerAdam:
 
     Adam combines the benefits of both momentum and RMSprop.
     It uses moving averages of the gradient and its squared value to adapt the learning rate for each parameter.
-    Adam is known for its efficiency and effectiveness in a wide range of optimization problems.  It is less prone to getting stuck in local minima and handles noisy/sparse gradients well.
+    Adam is known for its efficiency and effectiveness in a wide range of optimization problems.\
+            It is less prone to getting stuck in local minima and handles noisy/sparse gradients well.
     """
 
     def __init__(
@@ -210,11 +176,9 @@ class OptimizerAdam:
     def pre_update_params(self) -> None:
         """Updates the learning rate based on the decay parameter."""
         if self.decay:
-            self.current_learning_rate = self.learning_rate * (
-                1.0 / (1.0 + self.decay * self.iterations)
-            )
+            self.current_learning_rate = self.learning_rate * (1.0 / (1.0 + self.decay * self.iterations))
 
-    def update_params(self, Layer: LayerDense) -> None:
+    def update_params(self, layer: LayerDense) -> None:
         """Updates the layer's parameters using the Adam algorithm.
 
         Uses moving averages of the gradient (first moment) and its squared value (second moment)
@@ -231,50 +195,26 @@ class OptimizerAdam:
             The layer whose parameters to update.
         """
 
-        if not hasattr(Layer, "weight_cache"):
-            Layer.weight_momentums = np.zeros_like(Layer.weights)
-            Layer.bias_momentums = np.zeros_like(Layer.biases)
-            Layer.weight_cache = np.zeros_like(Layer.weights)
-            Layer.bias_cache = np.zeros_like(Layer.biases)
+        if not hasattr(layer, "weight_cache"):
+            layer.weight_momentums = np.zeros_like(layer.weights)
+            layer.bias_momentums = np.zeros_like(layer.biases)
+            layer.weight_cache = np.zeros_like(layer.weights)
+            layer.bias_cache = np.zeros_like(layer.biases)
         # first moment
-        Layer.weight_momentums = (
-            self.beta_1 * Layer.weight_momentums + (1 - self.beta_1) * Layer.dweights
-        )
-        Layer.bias_momentums = (
-            self.beta_1 * Layer.bias_momentums + (1 - self.beta_1) * Layer.dbiases
-        )
-        weight_momentums_corrected = Layer.weight_momentums / (
-            1 - self.beta_1 ** (self.iterations + 1)
-        )  # bias correction
-        bias_momentums_corrected = Layer.bias_momentums / (
-            1 - self.beta_1 ** (self.iterations + 1)
-        )
+        layer.weight_momentums = self.beta_1 * layer.weight_momentums + (1 - self.beta_1) * layer.dweights
+        layer.bias_momentums = self.beta_1 * layer.bias_momentums + (1 - self.beta_1) * layer.dbiases
+        weight_momentums_corrected = layer.weight_momentums / (1 - self.beta_1 ** (self.iterations + 1))  # bias correction
+        bias_momentums_corrected = layer.bias_momentums / (1 - self.beta_1 ** (self.iterations + 1))
         # second moment
-        Layer.weight_cache = (
-            self.beta_2 * Layer.weight_cache + (1 - self.beta_2) * Layer.dweights**2
-        )
-        Layer.bias_cache = (
-            self.beta_2 * Layer.bias_cache + (1 - self.beta_2) * Layer.dbiases**2
-        )
-        weight_cache_corrected = Layer.weight_cache / (
-            1 - self.beta_2 ** (self.iterations + 1)
-        )  # bias correction
-        bias_cache_corrected = Layer.bias_cache / (
-            1 - self.beta_2 ** (self.iterations + 1)
-        )
-        weight_updates = (
-            -self.current_learning_rate
-            * weight_momentums_corrected
-            / (np.sqrt(weight_cache_corrected) + self.epsilon)
-        )
-        bias_updates = (
-            -self.current_learning_rate
-            * bias_momentums_corrected
-            / (np.sqrt(bias_cache_corrected) + self.epsilon)
-        )
+        layer.weight_cache = self.beta_2 * layer.weight_cache + (1 - self.beta_2) * layer.dweights**2
+        layer.bias_cache = self.beta_2 * layer.bias_cache + (1 - self.beta_2) * layer.dbiases**2
+        weight_cache_corrected = layer.weight_cache / (1 - self.beta_2 ** (self.iterations + 1))  # bias correction
+        bias_cache_corrected = layer.bias_cache / (1 - self.beta_2 ** (self.iterations + 1))
+        weight_updates = -self.current_learning_rate * weight_momentums_corrected / (np.sqrt(weight_cache_corrected) + self.epsilon)
+        bias_updates = -self.current_learning_rate * bias_momentums_corrected / (np.sqrt(bias_cache_corrected) + self.epsilon)
         # params updates
-        Layer.weights += weight_updates
-        Layer.biases += bias_updates
+        layer.weights += weight_updates
+        layer.biases += bias_updates
 
     def post_update_params(self) -> None:
         """Increments the iteration counter."""

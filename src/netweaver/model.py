@@ -1,19 +1,17 @@
 import copy
 import pickle
+from typing import Optional, Tuple
 
 import numpy as np
-from typing import Tuple, Optional
-
 from numpy.typing import ArrayLike
+from tqdm.auto import tqdm
 
+from netweaver.accuracy import AccuracyTypes
 from netweaver.activation_layers import ActivationSoftmax, ActivationTypes
 from netweaver.layers import LayerInput, LayerTypes, TrainableLayerTypes
 from netweaver.lossfunctions import LossCategoricalCrossentropy, LossTypes
-from netweaver.softmaxCCEloss import ActivationSoftmaxLossCategoricalCrossentropy
-from netweaver.accuracy import AccuracyTypes
 from netweaver.optimizers import OptimizerTypes
-
-from tqdm.auto import tqdm
+from netweaver.softmax_cce_loss import ActivationSoftmaxLossCategoricalCrossentropy
 
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
@@ -28,6 +26,14 @@ class Model:
     def __init__(self) -> None:
         """
         Initialize the model with an empty list of layers and no softmax classifier output.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         self.layers: list[LayerTypes | ActivationTypes] = []
         self.softmax_classifier_output = None  # 99
@@ -38,15 +44,14 @@ class Model:
     ) -> None:
         """Adds a layer to the model.
 
-        This method appends the given layer to the model's list of layers.
-        The layer can be either a Layer object or an Activation object.  
-        **Available layers**: [LayerDense | LayerDropout | LayerInput]  
-        **Available activations**: [ActivationReLU | ActivationSoftmax | ActivationSigmoid | ActivationLinear]
-
         Parameters
         ----------
         layer : LayerTypes | ActivationTypes
-            The layer to be added to the model.
+            The layer to add. Can be an instance of LayerDense, LayerDropout, or any activation layer.
+
+        Returns
+        -------
+        None
         """
         self.layers.append(layer)
 
@@ -69,6 +74,10 @@ class Model:
             The optimizer to use, by default None.
         accuracy : AccuracyTypes, optional
             The accuracy metric to use, by default None.
+
+        Returns
+        -------
+        None
         """
         if loss is not None:
             self.loss = loss
@@ -78,17 +87,15 @@ class Model:
             self.accuracy = accuracy
 
     def finalize(self) -> None:
-        """
-        Finalizes the model architecture by chaining layers, identifying trainable layers,
-        and setting up a softmax_classifier_output if applicable.
+        """Finalizes the model architecture.
 
-        1. Creates doubly linked list of layers
-        2. Creates list of trainable layers
-        3. Creates refrence for Output_Activation_Layer
-        4. Passes the trainable layer to Loss Object, to facilate the compute of regularization loss
-        5. Modifies object attribute self.softmax_classifier_output to refrence ActivationSoftmaxLossCategoricalCrossentropy() object
-           if the model is multi-class classifier
-        6. LayerInput x (LayerDense  x LayerActivations x LayerDropouts x LayerOuputActivation) x LayerLoss
+        Prepares the model for training by performing the following steps:
+
+        1. Creates a doubly linked list of layers to facilitate forward and backward passes.
+        2. Identifies and stores trainable layers (those with weights).
+        3. Sets a reference to the output layer's activation function.
+        4. Provides the loss function with a reference to the trainable layers for regularization.
+        5. Creates a combined softmax activation and categorical cross-entropy loss object if applicable for optimization.
 
         Parameters
         ----------
@@ -105,9 +112,7 @@ class Model:
         for i in range(layer_count):
             # doubly linked list to facilate both forward and backward pass
             self.layers[i].prev = self.input_layer if i == 0 else self.layers[i - 1]
-            self.layers[i].next = (
-                self.loss if i == layer_count - 1 else self.layers[i + 1]
-            )
+            self.layers[i].next = self.loss if i == layer_count - 1 else self.layers[i + 1]
             # Identify trainable layers
             if hasattr(self.layers[i], "weights"):
                 self.trainable_layers.append(self.layers[i])
@@ -120,67 +125,49 @@ class Model:
             self.loss.remember_trainable_layers(self.trainable_layers)
 
         # Set up softmax_classifier_output if applicable, for rapid backward progress
-        if isinstance(self.layers[-1], ActivationSoftmax) and isinstance(
-            self.loss, LossCategoricalCrossentropy
-        ):
-            self.softmax_classifier_output = (
-                ActivationSoftmaxLossCategoricalCrossentropy()
-            )
+        if isinstance(self.layers[-1], ActivationSoftmax) and isinstance(self.loss, LossCategoricalCrossentropy):
+            self.softmax_classifier_output = ActivationSoftmaxLossCategoricalCrossentropy()
 
     def train(
         self,
-        X,
-        y,
+        instances_train,
+        gtruth_train,
         *,
         epochs=1,
         batch_size=None,
         print_every=1,
         validation_data=None,
     ) -> None:
-        """Trains the model on the provided data.
+        """Trains the model using the provided data and parameters.
 
-        Performs the training loop for a specified number of epochs, using mini-batches if specified.  Calculates loss and accuracy for each batch and epoch, and optionally performs validation.
+        This method iterates through the training data in batches (or uses the entire dataset if batch_size is None),
+        performs forward and backward passes, updates model parameters using the optimizer, and prints training progress.
+        It also performs validation at the end of each epoch if validation data is provided.
 
         Parameters
         ----------
-        X : numpy.ndarray
-            Input training data.
-        y : numpy.ndarray
-            Target training labels.
-        epochs : int, optional
+        instances_train : ArrayLike
+            Training data.
+        gtruth_train : ArrayLike
+            Training labels.
+        epochs : int, optional (keyword-only argument)
             Number of training epochs, by default 1.
-        batch_size : int, optional
-            Size of training batches, by default None (full dataset).
-        print_every : int, optional
-            Frequency of printing training progress, by default 1.
-        validation_data : tuple, optional
-            Validation data as a tuple (X_val, y_val), by default None.
+        batch_size : int, optional (keyword-only argument)
+            Size of each mini-batch, by default None (uses the entire dataset).
+        print_every : int, optional (keyword-only argument)
+            Frequency of printing training progress (in steps), by default 1.
+        validation_data : tuple, optional (keyword-only argument)
+            Validation data as a tuple (instances_validation, gtruth_validation), by default None.
 
         Returns
         -------
         None
-
-        1. Initialize AccuracyRegression's precision property. Using entire Y_data training data for calculation
-        2. Modify train_steps value if batch_size value is not None
-        3. Epoch: Resets accumulated loss and accuracy for every epoch run
-           1. Batch: slice the batch
-           2. Batch: Call to forward method with data and training=True (training argument mainly for dropout layers)
-           3. Batch: Compute data_loss and R_loss
-           4. Batch: Compute predictions using Output_Activation_Layer's prediction method
-           5. Batch: Compute accuracy using predictions(from above step) and y_true
-           6. Batch: Call to backward method with Output and y_true
-           7. Batch: call to optimizer method with trainable layers, pre_update -> update_params -> post_update
-           8. Batch: Loggin batch training progress
-        5. Epoch: Compute Epoch's Loss and Accuracy using calculate_accumulated method
-        6. Epoch: Logging Epoch summary
-        7. Epoch: Validate the model using Validate data
         """
-        self.accuracy.init(y)  # mainly for AccuracyRegression's precision. 
-
+        self.accuracy.init(gtruth_train)
         train_steps = 1
         if batch_size is not None:
-            train_steps = len(X) // batch_size
-            if train_steps * batch_size < len(X):
+            train_steps = len(instances_train) // batch_size
+            if train_steps * batch_size < len(instances_train):
                 train_steps += 1
 
         for epoch in tqdm(range(1, epochs + 1), desc="Traning..."):
@@ -190,27 +177,25 @@ class Model:
             for step in tqdm(range(train_steps), desc=f"Epoch {epoch}", leave=False):
                 # Get the current batch
                 if batch_size is None:
-                    batch_X = X
-                    batch_y = y
+                    batch_instances_train = instances_train
+                    batch_gtruth_train = gtruth_train
                 else:
-                    batch_X = X[step * batch_size : (step + 1) * batch_size]
-                    batch_y = y[step * batch_size : (step + 1) * batch_size]
+                    batch_instances_train = instances_train[step * batch_size : (step + 1) * batch_size]
+                    batch_gtruth_train = gtruth_train[step * batch_size : (step + 1) * batch_size]
 
                 # Perform forward pass
-                output = self.forward(batch_X, training=True)
+                output = self.forward(batch_instances_train, training=True)
 
                 # Calculate loss
-                data_loss, regularization_loss = self.loss.calculate(
-                    output, batch_y, include_regularization=True
-                )
+                data_loss, regularization_loss = self.loss.calculate(output, batch_gtruth_train, include_regularization=True)
                 loss = data_loss + regularization_loss
 
                 # Calculate accuracy
                 predictions = self.output_layer_activation.predictions(output)
-                accuracy = self.accuracy.calculate(predictions, batch_y)
+                accuracy = self.accuracy.calculate(predictions, batch_gtruth_train)
 
                 # Perform backward pass
-                self.backward(output, batch_y)
+                self.backward(output, batch_gtruth_train)
 
                 # Update weights and biases
                 self.optimizer_action()
@@ -227,9 +212,7 @@ class Model:
                     )
 
             # Print epoch summary
-            epoch_data_loss, epoch_regularization_loss = (
-                self.loss.calculate_accumulated(include_regularization=True)
-            )
+            epoch_data_loss, epoch_regularization_loss = self.loss.calculate_accumulated(include_regularization=True)
             epoch_loss = epoch_data_loss + epoch_regularization_loss
             epoch_accuracy = self.accuracy.calculate_accumulated()
 
@@ -248,43 +231,41 @@ class Model:
 
     def forward(
         self,
-        X: ArrayLike,
+        instances: ArrayLike,
         training: bool,
     ) -> Float64Array2D:
         """
         Perform a forward pass through the model.
 
         Args:
-            X: Input data.
+            instances: Input data.
             training: Whether the model is in training mode.
 
         Returns:
             Output of the last layer.
         """
-        self.input_layer.forward(X, training)
+        self.input_layer.forward(instances, training)
         for layer in self.layers:
-            layer.forward(
-                layer.prev.output, training
-            )  # the training argument is only consumed by Dropout layer
+            layer.forward(layer.prev.output, training)  # the training argument is only consumed by Dropout layer
 
         return layer.output
 
-    def backward(self, output, y):
+    def backward(self, output, gtruth):
         """
         Perform a backward pass through the model.
 
         Args:
             output: Output of the last layer.
-            y: True labels.
+            gtruth: True labels.
         """
         if self.softmax_classifier_output is not None:
-            self.softmax_classifier_output.backward(output, y)
+            self.softmax_classifier_output.backward(output, gtruth)
             self.layers[-1].dinputs = self.softmax_classifier_output.dinputs
             for layer in reversed(self.layers[:-1]):
                 layer.backward(layer.next.dinputs)
             return
 
-        self.loss.backward(output, y)
+        self.loss.backward(output, gtruth)
         for layer in reversed(self.layers):
             layer.backward(layer.next.dinputs)
 
@@ -294,35 +275,33 @@ class Model:
             self.optimizer.update_params(layer)
         self.optimizer.post_update_params()
 
-    def evaluate(self, X_val, y_val, *, batch_size=None):
+    def evaluate(self, instances_validation, gtruth_validation, *, batch_size=None):
         """
         Evaluate the model on validation data.
 
         Args:
-            X_val: Validation input data.
-            y_val: Validation true labels.
+            instances_validation: Validation input data.
+            gtruth_validation: Validation true labels.
             batch_size: Batch size for evaluation.
         """
         validation_steps = 1
         if batch_size is not None:
-            validation_steps = len(X_val) // batch_size
-            if validation_steps * batch_size < len(X_val):
+            validation_steps = len(instances_validation) // batch_size
+            if validation_steps * batch_size < len(instances_validation):
                 validation_steps += 1
         self.loss.new_pass()
         self.accuracy.new_pass()
         for step in range(validation_steps):
             if batch_size is None:
-                batch_X = X_val
-                batch_y = y_val
+                batch_instances_validation = instances_validation
+                batch_gtruth_validation = gtruth_validation
             else:
-                batch_X = X_val[step * batch_size : (step + 1) * batch_size]
-                batch_y = y_val[step * batch_size : (step + 1) * batch_size]
-            output = self.forward(
-                batch_X, training=False
-            )  # making dropout layers out of loop
-            self.loss.calculate(output, batch_y)
+                batch_instances_validation = instances_validation[step * batch_size : (step + 1) * batch_size]
+                batch_gtruth_validation = gtruth_validation[step * batch_size : (step + 1) * batch_size]
+            output = self.forward(batch_instances_validation, training=False)  # making dropout layers out of the loop
+            self.loss.calculate(output, batch_gtruth_validation)
             predictions = self.output_layer_activation.predictions(output)
-            self.accuracy.calculate(predictions, batch_y)
+            self.accuracy.calculate(predictions, batch_gtruth_validation)
         validation_loss = self.loss.calculate_accumulated()
         validation_accuracy = self.accuracy.calculate_accumulated()
         print(
@@ -330,12 +309,12 @@ class Model:
             +f"acc: {validation_accuracy:.3f}, " + f"loss: {validation_loss:.3f}",
         )
 
-    def predict(self, X, *, batch_size=None):
+    def predict(self, instances_prediction, *, batch_size=None):
         """
         Generate predictions for the given input data.
 
         Args:
-            X: Input data.
+            instances_prediction: Input data.
             batch_size: Batch size for prediction.
 
         Returns:
@@ -343,22 +322,18 @@ class Model:
         """
         prediction_steps = 1
         if batch_size is not None:
-            prediction_steps = len(X) // batch_size
-            if prediction_steps * batch_size < len(X):
+            prediction_steps = len(instances_prediction) // batch_size
+            if prediction_steps * batch_size < len(instances_prediction):
                 prediction_steps += 1
         output = []
         for step in range(prediction_steps):
             if batch_size is None:
-                batch_X = X
+                batch_instances_prediction = instances_prediction
             else:
-                batch_X = X[step * batch_size : (step + 1) * batch_size]
-            batch_output = self.forward(
-                batch_X, training=False
-            )  # making dropout layer out of loop
+                batch_instances_prediction = instances_prediction[step * batch_size : (step + 1) * batch_size]
+            batch_output = self.forward(batch_instances_prediction, training=False)  # making dropout layer out of loop
             output.append(batch_output)
-        return np.vstack(
-            output
-        )  # Each row is a batch's prediction. Each value in the row is the prediction of a sample in a batch
+        return np.vstack(output)  # Each row is a batch's prediction. Each value in the row is the prediction of a sample in a batch
 
     def get_parameters(self):
         """
@@ -430,5 +405,4 @@ class Model:
             The loaded model.
         """
         with open(path, "rb") as f:
-            model = pickle.load(f)
-        return model
+            return pickle.load(f)

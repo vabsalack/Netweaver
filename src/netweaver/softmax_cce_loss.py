@@ -11,7 +11,8 @@ Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 class ActivationSoftmaxLossCategoricalCrossentropy:
     """Combines softmax activation and categorical cross-entropy loss.
 
-    Provides an optimized implementation for calculating the loss graidents w.r.t penultimate layer outputs in a single step faster than traditional softmax and categorical loss backward methods.
+    Provides an optimized implementation for calculating the loss graidents w.r.t penultimate layer outputs in a single step faster than traditional\
+          softmax and categorical loss backward methods.
     Formula = predicted values - true values
     """
 

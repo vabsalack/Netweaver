@@ -5,6 +5,7 @@ from zipfile import ZipFile
 
 import cv2
 import numpy as np
+from pympler import asizeof
 
 
 def load_mnist_dataset(dataset, path) -> tuple[np.ndarray, np.ndarray]:
@@ -14,19 +15,19 @@ def load_mnist_dataset(dataset, path) -> tuple[np.ndarray, np.ndarray]:
     It reads images from subdirectories representing labels and returns them as numpy arrays.
     """
     labels = os.listdir(os.path.join(path, dataset))
-    X = []
-    y = []
+    instances = []
+    gtruth = []
     for label in labels:
         for file in os.listdir(os.path.join(path, dataset, label)):
             image = cv2.imread(
                 os.path.join(path, dataset, label, file), cv2.IMREAD_UNCHANGED
             )  # pass (cv2.IMREAD_UNCHANGED or -1) else it duplicates the same value for all channels, image shape (28, 28, 3)
-            X.append(image)
-            y.append(label)
-    return np.array(X), np.array(y).astype("uint8")
+            instances.append(image)
+            gtruth.append(label)
+    return np.array(instances), np.array(gtruth).astype("uint8")
 
 
-def object_size(ob):
+def object_size(python_object):
     """Calculates the size of an object in gigabytes.
 
     This function uses the 'pympler' library to determine the size of the provided object
@@ -42,10 +43,58 @@ def object_size(ob):
     str
         The size of the object in gigabytes, formatted as a string.
     """
-    from pympler import asizeof
 
-    object_bytes = asizeof.asizeof(ob)
-    return f"{object_bytes / 1073741824:.3f}Gb used"
+    object_bytes = asizeof.asizeof(python_object)
+    return f"{object_bytes / 1073741824:.5f}"
+
+
+def summary_dataset(instances_train: np.ndarray, gtruth_train: np.ndarray, instances_test: np.ndarray, gtruth_test: np.ndarray) -> str:
+    """Summarizes key properties of training and testing datasets.
+
+    This function takes training and testing data and labels as input, then computes and
+    formats a summary of their key properties, including instance count, shape, data type,
+    and memory usage.
+
+    Parameters
+    ----------
+    instances_train : np.ndarray
+        Training data instances.
+    gtruth_train : np.ndarray
+        Training data labels.
+    instances_test : np.ndarray
+        Testing data instances.
+    gtruth_test : np.ndarray
+        Testing data labels.
+
+    Returns
+    -------
+    str
+        A formatted string containing the summary table of dataset properties.
+    """
+    # Collect all arrays into a dict for convenience
+    datasets = {"instances_train": instances_train, "gtruth_train": gtruth_train, "instances_test": instances_test, "gtruth_test": gtruth_test}
+    # Prepare headers
+    headers = list(datasets.keys())
+    column_width = max(len(h) for h in headers) + 2  # Create table rows
+
+    rows = [
+        ("instances count", [arr.shape[0] for arr in datasets.values()]),
+        ("shape of an instance", [arr.shape[1:] if arr.ndim > 1 else (1,) for arr in datasets.values()]),
+        ("Data type of unit", [str(arr.dtype) for arr in datasets.values()]),
+        ("Total memory (gb)", [object_size(arr) for arr in datasets.values()]),
+    ]
+
+    # Print header row
+    header_row = "Property".ljust(25) + "| " + "".join(h.ljust(column_width) for h in headers)
+    output_text = [header_row, "-" * len(header_row)]
+    # Print each data row
+    for label, values in rows:
+        row = f"{label.ljust(25)}| "
+        for val in values:
+            row += str(val).ljust(column_width)
+        output_text.append(row)
+
+    return "\n".join(output_text)
 
 
 def create_data_mnist(path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -64,29 +113,58 @@ def create_data_mnist(path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndar
     -------
     tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
         A tuple containing four numpy arrays:
-        - Training data (X)
-        - Training labels (y)
-        - Testing data (X_test)
-        - Testing labels (y_test)
+        - Training data (instances_train)
+        - Training labels (gtruth_train)
+        - Testing data (instances_test)
+        - Testing labels (gtruth_test)
     """
-    X, y = load_mnist_dataset("train", path)
-    X_test, y_test = load_mnist_dataset("test", path)
-    print(
-        f"X shape:      {X.shape} dtype({type(X[0][0][0])}) mem usage: {object_size(X)}, y shape:      {y.shape} dtype({type(y[0])}) mem usage: {object_size(y)}"
-    )
-    print(
-        f"X_test shape: {X_test.shape} dtype({type(X_test[0][0][0])}) mem usage: {object_size(X_test)}, y_test shape: {y_test.shape} dtype({type(y_test[0])}) mem usage: {object_size(y_test)}"
-    )
-    return X, y, X_test, y_test
+    instances_train, gtruth_train = load_mnist_dataset("train", path)
+    instances_test, gtruth_test = load_mnist_dataset("test", path)
+
+    print(summary_dataset(instances_train, gtruth_train, instances_test, gtruth_test))
+    return instances_train, gtruth_train, instances_test, gtruth_test
 
 
 def extract_file(file: str, folder: str) -> None:
+    """Extracts a zip file to a specified folder.
+
+    This function extracts all the contents of a given zip file to the designated folder.
+
+    Parameters
+    ----------
+    file : str
+        The path to the zip file to extract.
+    folder : str
+        The path to the folder where the zip file contents should be extracted.
+
+    Returns
+    -------
+    None
+        This function does not return anything. It extracts the zip file.
+    """
     print("Unzipping images...")
     with ZipFile(file) as zip_images:
         zip_images.extractall(folder)
 
 
 def download_file(url: str, file_name: str) -> None:
+    """Downloads a file from a given URL and saves it to a specified location.
+
+    This function retrieves a file from the provided URL using urllib.request.urlretrieve
+    and saves it with the given file name.
+
+    Parameters
+    ----------
+    url : str
+        The URL of the file to download.
+    file_name : str
+        The name to save the downloaded file as.
+
+    Returns
+    -------
+    None
+        This function does not return anything. It downloads and saves a file.
+    """
     print(f"Downloading {url} and saving as {file_name}...")
     urllib.request.urlretrieve(url, file_name)
 
@@ -108,7 +186,7 @@ def download_fashion_mnist_dataset(project_root_path) -> None:
     None
         This function does not return anything. It creates a directory and downloads files.
     """
-    FOLDER = "fashion_mnist_images"
+    folder = "fashion_mnist_images"
 
     # cwd_path = os.getcwd()
     # dataset_pdir_path = (
@@ -121,12 +199,12 @@ def download_fashion_mnist_dataset(project_root_path) -> None:
     if not os.path.isdir(datasetdir_path):
         os.mkdir(datasetdir_path)
 
-    if not os.path.isdir(f"{datasetdir_path}/{FOLDER}"):
-        URL = "https://nnfs.io/datasets/fashion_mnist_images.zip"
-        FILE = "fashion_mnist_images.zip"
-        download_file(URL, f"{datasetdir_path}/{FILE}")
+    if not os.path.isdir(f"{datasetdir_path}/{folder}"):
+        url = "https://nnfs.io/datasets/fashion_mnist_images.zip"
+        file = "fashion_mnist_images.zip"
+        download_file(url, f"{datasetdir_path}/{file}")
 
-        extract_file(f"{datasetdir_path}/{FILE}", f"{datasetdir_path}/{FOLDER}")
+        extract_file(f"{datasetdir_path}/{file}", f"{datasetdir_path}/{folder}")
         print("add datasets/ dir to .gitignore file if versioned")
     else:
-        print(f"Fashion_mnish_dataset is already available in {datasetdir_path}/{FOLDER}")
+        print(f"Fashion_mnish_dataset is already available in {datasetdir_path}/{folder}")

@@ -1,8 +1,6 @@
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
-
-from typing import Union
 
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
@@ -54,18 +52,12 @@ class ActivationSoftmax:
             - softmax derivative is calculated using jacobian matrix (square matrix)
         """
         self.dinputs = np.empty_like(dvalues)
-        for index, (single_output, single_dvalues) in enumerate(
-            zip(self.output, dvalues)
-        ):
+        for index, (single_output, single_dvalues) in enumerate(zip(self.output, dvalues)):
             single_output = single_output.reshape(-1, 1)
-            jacobian_matrix = np.diagflat(single_output) - np.dot(
-                single_output, single_output.T
-            ) # here the jacobian is square and symmentrix matrix
+            jacobian_matrix = np.diagflat(single_output) - np.dot(single_output, single_output.T)  # here the jacobian is square and symmentrix matrix
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
-    def predictions(
-        self, outputs: Float64Array2D
-    ) -> np.ndarray[Tuple[int], np.dtype[np.int64]]:
+    def predictions(self, outputs: Float64Array2D) -> np.ndarray[Tuple[int], np.dtype[np.int64]]:
         return np.argmax(outputs, axis=1)
 
 
@@ -94,9 +86,7 @@ class ActivationSigmoid:
         """
         self.dinputs = dvalues * (1 - self.output) * self.output
 
-    def predictions(
-        self, outputs: Float64Array2D
-    ) -> np.ndarray[Tuple[int, int], np.dtype[np.int64]]:
+    def predictions(self, outputs: Float64Array2D) -> np.ndarray[Tuple[int, int], np.dtype[np.int64]]:
         """
         - product of arr: NDArray[bool_] and x: int is y: NDArray[int64]
         - array([False, True]) * -2 = array([0, -2])
@@ -125,5 +115,6 @@ class ActivationLinear:
 
     def predictions(self, outputs: Float64Array2D) -> Float64Array2D:
         return outputs
+
 
 ActivationTypes = Union[ActivationSoftmax, ActivationLinear, ActivationReLU, ActivationSigmoid]
