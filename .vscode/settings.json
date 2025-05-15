@@ -16,10 +16,13 @@
     "[jsonc]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     },
+    // "[toml]": {
+    //     "editor.defaultFormatter": "tamasfe.even-better-toml"
+    // },
     // EXPLORER SETTINGS
     "explorer.autoReveal": true,
     // WORKBENCH SETTINGS
-    "workbench.colorTheme": "Dracula Theme",
+    "workbench.colorTheme": "Default Dark Modern",
     "workbench.editor.enablePreview": false,
     "workbench.editor.tabSizing": "shrink",
     // TERMINAL SETTINGS
@@ -30,9 +33,6 @@
     "terminal.integrated.minimumContrastRatio": 5,
     "terminal.integrated.fontSize": 15,
     "terminal.integrated.fontFamily": "MesloLGS NF",
-    "[toml]": {
-        "editor.defaultFormatter": "tamasfe.even-better-toml"
-    },
     "python.analysis.extraPaths": [
         "./src"
     ],

@@ -4,7 +4,7 @@
     "dockerfile": "Dockerfile",
     "context": ".", // Build context (relative to the .devcontainer folder)
     "args": {
-      "ARG_VARIANT": "3.13.3-bookworm", // Base Image version (Python:Debian-bookwarm)
+      "ARG_VARIANT": "3.13-slim-bookworm", // Base Image version (Python:Debian-bookwarm)
       "ARG_UV_PYTHON": "3.13.3", // UV's managed python version
       "ARG_USER_NAME": "USER_NETWEAVER" // Name of a new user
     }
@@ -16,7 +16,7 @@
         "charliermarsh.ruff",
         "ms-toolsai.jupyter",
         "GitHub.copilot",
-        "tamasfe.even-better-toml",
+        // "tamasfe.even-better-toml",
         "PKief.material-icon-theme",
         "sourcery.sourcery",
         "hediet.vscode-drawio"

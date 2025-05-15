@@ -9,7 +9,13 @@ ENV HOME_DIR=/home/${USER_NAME}
 ENV PATH="${HOME_DIR}/.local/bin:$PATH"
 
 # Install zsh and create a new user
-RUN apt-get update && apt-get install -y zsh && \
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+    build-essential \
+    curl \
+    git \
+    ca-certificates && \
+    apt-get install -y zsh && \
     useradd -m -s /bin/zsh ${USER_NAME} && \
     echo "${USER_NAME}:1234" | chpasswd && \
     chown -R ${USER_NAME}:${USER_NAME} ${HOME_DIR} && \

@@ -10,7 +10,8 @@ dependencies = [
     "opencv-python-headless>=4.11.0.86",
     "tqdm>=4.67.1",
     "pympler>=1.1",
-
+    "ipympl>=0.9.7",
+    "pandas>=2.2.3",
 ]
 
 [build-system]
