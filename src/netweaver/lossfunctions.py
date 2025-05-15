@@ -2,7 +2,7 @@ from typing import List, Tuple, Union
 
 import numpy as np
 
-from netweaver.layers import TrainableLayerTypes
+from .layers import TrainableLayerTypes
 
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 

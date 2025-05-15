@@ -2,8 +2,8 @@ from typing import Tuple
 
 import numpy as np
 
-from netweaver.activation_layers import ActivationSoftmax
-from netweaver.lossfunctions import LossCategoricalCrossentropy
+from .activation_layers import ActivationSoftmax
+from .lossfunctions import LossCategoricalCrossentropy
 
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 

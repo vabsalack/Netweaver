@@ -6,12 +6,13 @@ import numpy as np
 from numpy.typing import ArrayLike
 from tqdm.auto import tqdm
 
-from netweaver.accuracy import AccuracyTypes
-from netweaver.activation_layers import ActivationSoftmax, ActivationTypes
-from netweaver.layers import LayerInput, LayerTypes, TrainableLayerTypes
-from netweaver.lossfunctions import LossCategoricalCrossentropy, LossTypes
-from netweaver.optimizers import OptimizerTypes
-from netweaver.softmax_cce_loss import ActivationSoftmaxLossCategoricalCrossentropy
+from ._internal_utils import append_log_file, create_log_dir, create_log_file, get_cwd, get_datetime, join_path
+from .accuracy import AccuracyTypes
+from .activation_layers import ActivationSoftmax, ActivationTypes
+from .layers import LayerInput, LayerTypes, TrainableLayerTypes
+from .lossfunctions import LossCategoricalCrossentropy, LossTypes
+from .optimizers import OptimizerTypes
+from .softmax_cce_loss import ActivationSoftmaxLossCategoricalCrossentropy
 
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
@@ -37,6 +38,8 @@ class Model:
         """
         self.layers: list[LayerTypes | ActivationTypes] = []
         self.softmax_classifier_output = None  # 99
+        self.now = None
+        self.path_model_log = None
 
     def add(
         self,
@@ -129,14 +132,7 @@ class Model:
             self.softmax_classifier_output = ActivationSoftmaxLossCategoricalCrossentropy()
 
     def train(
-        self,
-        instances_train,
-        gtruth_train,
-        *,
-        epochs=1,
-        batch_size=None,
-        print_every=1,
-        validation_data=None,
+        self, instances_train, gtruth_train, *, epochs=1, batch_size=None, print_epoch_summary=False, validation_data=None, path_log=get_cwd()
     ) -> None:
         """Trains the model using the provided data and parameters.
 
@@ -163,6 +159,42 @@ class Model:
         -------
         None
         """
+        self.now = get_datetime()
+        self.path_model_log = create_log_dir(log_path=path_log, now=self.now)
+        field_dict_epoch = {
+            "epoch": None,
+            "learning_rate": None,
+            "loss_epoch": None,
+            "loss_epoch_data": None,
+            "loss_epoch_reg": None,
+            "accuracy_epoch": None,
+        }
+        field_dict_batch = {
+            "epoch": None,
+            "xaxis_value": None,
+            "step": None,
+            "learning_rate": None,
+            "loss_batch": None,
+            "loss_batch_data": None,
+            "loss_batch_reg": None,
+            "accuracy_batch": None,
+        }
+        path_epoch_log = create_log_file(path_model_log=self.path_model_log, type="epoch", field_names=field_dict_epoch.keys(), now=self.now)
+        path_batch_log = create_log_file(path_model_log=self.path_model_log, type="batch", field_names=field_dict_batch.keys(), now=self.now)
+
+        print(f"Epoch Log: {path_epoch_log}\nBatch Log: {path_batch_log}")
+
+        if validation_data is not None:
+            field_dict_validation = {
+                "epoch": None,
+                "loss_validation": None,
+                "accuracy_validation": None,
+            }
+            path_validation_log = create_log_file(
+                path_model_log=self.path_model_log, type="validation", field_names=field_dict_validation.keys(), now=self.now
+            )
+            print(f"Validation Log: {path_validation_log}")
+
         self.accuracy.init(gtruth_train)
         train_steps = 1
         if batch_size is not None:
@@ -170,18 +202,18 @@ class Model:
             if train_steps * batch_size < len(instances_train):
                 train_steps += 1
 
-        for epoch in tqdm(range(1, epochs + 1), desc="Traning..."):
+        for epoch in tqdm(range(1, epochs + 1), desc="Traning: ", unit="epoch"):
             self.loss.new_pass()  # for accumulated sum and count to compute loss over an epoch
             self.accuracy.new_pass()  # for accumulated sum and count for accuracies
 
-            for step in tqdm(range(train_steps), desc=f"Epoch {epoch}", leave=False):
+            for step in tqdm(range(1, train_steps + 1), desc=f"Epoch {epoch}: ", leave=False, unit="batch"):
                 # Get the current batch
                 if batch_size is None:
                     batch_instances_train = instances_train
                     batch_gtruth_train = gtruth_train
                 else:
-                    batch_instances_train = instances_train[step * batch_size : (step + 1) * batch_size]
-                    batch_gtruth_train = gtruth_train[step * batch_size : (step + 1) * batch_size]
+                    batch_instances_train = instances_train[(step - 1) * batch_size : step * batch_size]
+                    batch_gtruth_train = gtruth_train[(step - 1) * batch_size : step * batch_size]
 
                 # Perform forward pass
                 output = self.forward(batch_instances_train, training=True)
@@ -201,33 +233,58 @@ class Model:
                 self.optimizer_action()
 
                 # Print Batch training progress
-                if not step % print_every or step == train_steps - 1:
-                    print(
-                        f"step: {step:<10}"
-                        + f"acc: {accuracy:<10.3f}"
-                        + f"loss: {loss:<10.3f}"
-                        + f"data_loss: {data_loss:<10.3f}"
-                        + f"reg_loss: {regularization_loss:<10.3f}"
-                        + f"lr: {self.optimizer.current_learning_rate:<10.7f}"
-                    )
+                # if not step % print_every or step == train_steps - 1:
+                # print(
+                #     f"step: {step:<10}"
+                #     + f"acc: {accuracy:<10.3f}"
+                #     + f"loss: {loss:<10.3f}"
+                #     + f"data_loss: {data_loss:<10.3f}"
+                #     + f"reg_loss: {regularization_loss:<10.3f}"
+                #     + f"lr: {self.optimizer.current_learning_rate:<10.7f}"
+                # )
+                # ...
+                field_dict_batch["epoch"] = epoch
+                field_dict_batch["xaxis_value"] = epoch + ((1 / train_steps) * (step - 1))
+                field_dict_batch["step"] = step
+                field_dict_batch["learning_rate"] = self.optimizer.current_learning_rate
+                field_dict_batch["loss_batch"] = loss
+                field_dict_batch["loss_batch_data"] = data_loss
+                field_dict_batch["loss_batch_reg"] = regularization_loss
+                field_dict_batch["accuracy_batch"] = accuracy
+
+                append_log_file(path_file=path_batch_log, field_names=field_dict_batch.keys(), field_values=field_dict_batch)
 
             # Print epoch summary
             epoch_data_loss, epoch_regularization_loss = self.loss.calculate_accumulated(include_regularization=True)
             epoch_loss = epoch_data_loss + epoch_regularization_loss
             epoch_accuracy = self.accuracy.calculate_accumulated()
+            if print_epoch_summary:
+                print(
+                    f"\nEpoch {epoch:<10f} summary:\n"
+                    + f"acc: {epoch_accuracy:<10.1%}"
+                    + f"loss: {epoch_loss:<10.3f}"
+                    + f"data_loss: {epoch_data_loss:<10.3f}"
+                    + f"reg_loss: {epoch_regularization_loss:<10.3f}"
+                    + f"lr: {self.optimizer.current_learning_rate:<10.7f}\n"
+                )
+            field_dict_epoch["epoch"] = epoch
+            field_dict_epoch["learning_rate"] = self.optimizer.current_learning_rate
+            field_dict_epoch["loss_epoch"] = epoch_loss
+            field_dict_epoch["loss_epoch_data"] = epoch_data_loss
+            field_dict_epoch["loss_epoch_reg"] = epoch_regularization_loss
+            field_dict_epoch["accuracy_epoch"] = epoch_accuracy
 
-            print(
-                f"\nEpoch {epoch:<10f} summary:\n"
-                + f"acc: {epoch_accuracy:<10.3f}"
-                + f"loss: {epoch_loss:<10.3f}"
-                + f"data_loss: {epoch_data_loss:<10.3f}"
-                + f"reg_loss: {epoch_regularization_loss:<10.3f}"
-                + f"lr: {self.optimizer.current_learning_rate:<10.7f}\n"
-            )
+            append_log_file(path_file=path_epoch_log, field_names=field_dict_epoch.keys(), field_values=field_dict_epoch)
 
             # Perform validation if validation data is provided
             if validation_data is not None:
-                self.evaluate(*validation_data, batch_size=batch_size)
+                loss_validation, accuracy_validation = self.evaluate(*validation_data, batch_size=batch_size)
+
+                field_dict_validation["epoch"] = epoch
+                field_dict_validation["loss_validation"] = loss_validation
+                field_dict_validation["accuracy_validation"] = accuracy_validation
+
+                append_log_file(path_file=path_validation_log, field_names=field_dict_validation.keys(), field_values=field_dict_validation)
 
     def forward(
         self,
@@ -304,10 +361,11 @@ class Model:
             self.accuracy.calculate(predictions, batch_gtruth_validation)
         validation_loss = self.loss.calculate_accumulated()
         validation_accuracy = self.accuracy.calculate_accumulated()
-        print(
-            "validation",
-            +f"acc: {validation_accuracy:.3f}, " + f"loss: {validation_loss:.3f}",
-        )
+        # print(
+        #     "validation",
+        #     +f"acc: {validation_accuracy:.3f}, " + f"loss: {validation_loss:.3f}",
+        # )
+        return validation_loss, validation_accuracy
 
     def predict(self, instances_prediction, *, batch_size=None):
         """
@@ -335,7 +393,7 @@ class Model:
             output.append(batch_output)
         return np.vstack(output)  # Each row is a batch's prediction. Each value in the row is the prediction of a sample in a batch
 
-    def get_parameters(self):
+    def _get_parameters(self):
         """
         Get the parameters (weights and biases) of all trainable layers.
 
@@ -344,17 +402,24 @@ class Model:
         """
         return [layer.get_parameters() for layer in self.trainable_layers]
 
-    def save_parameters(self, path):
+    def save_parameters(self):
         """
         Save the parameters (weights and biases) of the model to a file.
 
         Args:
             path: Path to the file where parameters will be saved.
         """
-        with open(path, "wb") as f:
-            pickle.dump(self.get_parameters(), f)
+        if self.now is not None and self.path_model_log is not None:
+            path_pickle_file = join_path(self.path_model_log, f"params-pkl-{self.now:%Y%m%d-%H%M%S}.pkl")
+            try:
+                with open(path_pickle_file, "wb") as f:
+                    pickle.dump(self._get_parameters(), f)
+            except Exception as e:
+                print(f"An error occurred: {e}")
+            else:
+                print(f"params saved successfully\npickle file: {path_pickle_file}")
 
-    def set_parameters(self, parameters):
+    def _set_parameters(self, parameters):
         """
         Set the parameters (weights and biases) for all trainable layers.
 
@@ -372,7 +437,7 @@ class Model:
             path: Path to the file from which parameters will be loaded.
         """
         with open(path, "rb") as f:
-            self.set_parameters(pickle.load(f))
+            self._set_parameters(pickle.load(f))
 
     def save(self, path):
         """

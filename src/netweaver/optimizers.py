@@ -2,7 +2,7 @@ from typing import Union
 
 import numpy as np
 
-from netweaver.layers import LayerDense
+from .layers import LayerDense
 
 
 class OptimizerSGD:
