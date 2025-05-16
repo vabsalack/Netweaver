@@ -2,24 +2,32 @@ ARG ARG_VARIANT="3.13.3-bookworm"
 FROM python:${ARG_VARIANT}
 
 # Define build arguments and environment variables
-ARG ARG_UV_PYTHON="3.13.3"
+ARG ARG_UV_PYTHON="3.13"
 ARG ARG_USER_NAME="USER_NETWEAVER"
 ENV USER_NAME=${ARG_USER_NAME}
 ENV HOME_DIR=/home/${USER_NAME}
 ENV PATH="${HOME_DIR}/.local/bin:$PATH"
 
-# Install zsh and create a new user
+# Install essential binaries, you know the base is a slim verison
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
+    sudo \
     build-essential \
     curl \
+    openssh-client \
+    tzdata \
     git \
-    ca-certificates && \
-    apt-get install -y zsh && \
-    useradd -m -s /bin/zsh ${USER_NAME} && \
-    echo "${USER_NAME}:1234" | chpasswd && \
-    chown -R ${USER_NAME}:${USER_NAME} ${HOME_DIR} && \
+    man \
+    nano \
+    ca-certificates \
+    zsh && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+    
+
+RUN useradd -m -s /bin/zsh ${USER_NAME} && \
+    echo "${USER_NAME}:1234" | chpasswd && \
+    usermod -aG sudo USER_NETWEAVER && echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    chown -R ${USER_NAME}:${USER_NAME} ${HOME_DIR} 
 
 # Switch to non-root user
 USER ${USER_NAME}

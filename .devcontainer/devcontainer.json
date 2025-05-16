@@ -5,7 +5,7 @@
     "context": ".", // Build context (relative to the .devcontainer folder)
     "args": {
       "ARG_VARIANT": "3.13-slim-bookworm", // Base Image version (Python:Debian-bookwarm)
-      "ARG_UV_PYTHON": "3.13.3", // UV's managed python version
+      "ARG_UV_PYTHON": "3.13", // UV's managed python version
       "ARG_USER_NAME": "USER_NETWEAVER" // Name of a new user
     }
   },
@@ -26,9 +26,14 @@
   "containerEnv": {
     "UV_MANAGED_PYTHON": "1", // uv environment variable
     "UV_PYTHON": "3.13.3", // uv python version
-    "UV_CACHE_DIR": "/home/USER_NETWEAVER/project_netweaver/.cache/uv-cache"
+    "UV_CACHE_DIR": "/home/USER_NETWEAVER/project_netweaver/.cache/uv-cache",
+    "TZ": "Asia/Kolkata" // declaring TZ env variable is enough to congiure container's timezone
   },
   "postCreateCommand": "sh .devcontainer/update_zshrc.sh && uv lock && uv lock --upgrade && uv sync && sh .venv/bin/activate",
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/USER_NETWEAVER/project_netweaver/,type=bind",
-  "workspaceFolder": "/home/USER_NETWEAVER/project_netweaver/"
+  "workspaceFolder": "/home/USER_NETWEAVER/project_netweaver/",
+  "mounts": [
+    // "source=/etc/localtime,target=/etc/localtime,type=bind,readonly"
+    // , "source=${env:HOME}/.ssh,target=/home/USER_NETWEAVER/.ssh,type=bind,consistency=cached"
+  ]
 }
