@@ -76,6 +76,9 @@ class AccuracyCategorical(Accuracy):
             y = np.argmax(y, axis=1)
         return predictions == y
 
+    def __str__(self):
+        return "Accuracy_Categorical()"
+
 
 class AccuracyRegression(Accuracy):
     """Calculates the accuracy for regression data.
@@ -116,6 +119,9 @@ class AccuracyRegression(Accuracy):
             A boolean array indicating whether each prediction is within the precision range.
         """
         return np.absolute(predictions - y) < self.precision
+
+    def __str__(self):
+        return f"Accuracy_Regression: Precision(): {self.precision}"
 
 
 AccuracyTypes = Union[AccuracyCategorical, AccuracyRegression]

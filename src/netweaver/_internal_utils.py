@@ -13,6 +13,19 @@ def get_datetime() -> datetime.datetime:
     """
     return datetime.datetime.now()
 
+def get_dirname(path_file: str):
+    """Returns the directory name of the specified file path.
+
+    This function extracts and returns the directory component from a given file path.
+
+    Args:
+        path_file (str): The file path from which to extract the directory name.
+
+    Returns:
+        str: The directory name of the provided file path.
+    """
+    return os.path.dirname(path_file)
+
 
 def get_cwd() -> str:
     """Returns the current working directory as a string.
@@ -26,6 +39,16 @@ def get_cwd() -> str:
 
 
 def join_path(*args):
+    """Joins one or more path components intelligently.
+
+    This function combines multiple path components into a single path string.
+
+    Args:
+        *args: Components to be joined into a path.
+
+    Returns:
+        str: The joined path string.
+    """
     return os.path.join(*args)
 
 

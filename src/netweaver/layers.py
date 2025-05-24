@@ -6,9 +6,9 @@ from numpy.typing import ArrayLike
 Float64Array2D = np.ndarray[Tuple[int, int], np.dtype[np.float64]]
 
 
-class LayerInput:
+class _LayerInput:
     """
-    LayerInput class represents the input layer of the neural network.
+    _LayerInput class represents the input layer of the neural network.
     """
 
     def forward(self, inputs: ArrayLike, training: bool) -> None:
@@ -56,15 +56,25 @@ class LayerDense:
         bias_regularizer_l2 : float, default=0.0
             L2 regularization strength for biases
         """
+        self.n_inputs = n_inputs
+        self.n_neurons = n_neurons
+        self.count_trainable_params = n_neurons * (n_inputs + 1)
+
         rng = np.random.default_rng()
-        self.weights: Float64Array2D = 0.01 * rng.standard_normal((n_inputs, n_neurons))
-        self.biases: Float64Array2D = np.zeros((1, n_neurons))
+        self.weights: Float64Array2D = 0.01 * rng.standard_normal((self.n_inputs, self.n_neurons))
+        self.biases: Float64Array2D = np.zeros((1, self.n_neurons))
         # L1 strength
         self.weight_regularizer_l1: float = weight_regularizer_l1
         self.bias_regularizer_l1: float = bias_regularizer_l1
         # L2 strength
         self.weight_regularizer_l2: float = weight_regularizer_l2
         self.bias_regularizer_l2: float = bias_regularizer_l2
+
+    def __str__(self):
+        return (
+            f"Layer_Dense(): n_inputs: {self.n_inputs}| n_neurons: {self.n_neurons}| L1_w: {self.weight_regularizer_l1}|"
+            + f" L1_b: {self.bias_regularizer_l1}| L2_w: {self.weight_regularizer_l2}| L2_b:{self.bias_regularizer_l2}"
+        )
 
     def forward(self, inputs: Float64Array2D, training: bool) -> None:
         """Performs the forward pass of the dense layer.
@@ -133,24 +143,63 @@ class LayerDense:
 
 class LayerDropout:
     """
-    #### what
-        - Dropout is a regularization technique where randomly selected neurons are ignored during training.
-        - args: rate (percentage of neurons to be deactivated)
-    #### Improve
-    #### Flow
-        - [init -> (forward -> backward)]
-        - create binary mask from sample
+    Dropout layer for regularization in neural networks.
+
+    This layer randomly sets a fraction of input units to zero during training to help prevent overfitting.
+    The fraction of units dropped is determined by the dropout rate provided at initialization.
+
+    Parameters
+    ----------
+    rate : float or int
+        The dropout rate, representing the fraction of input units to drop (set to zero) during training.
+        Must be between 0 and 1.
+
+    Attributes
+    ----------
+    rate : float
+        The probability of keeping a unit active (1 - dropout rate).
+    binary_mask : np.ndarray
+        The mask applied to the input during training to drop units.
+    inputs : np.ndarray
+        The input data to the layer.
+    output : np.ndarray
+        The output after applying dropout.
+    dinputs : np.ndarray
+        The gradient of the loss with respect to the input.
     """
 
     def __init__(self, rate: Union[float, int]) -> None:
         """
-        - rate = 1-rate # np.random.binomial expects probability of success (1) not failure (0)
+        Initialize the Dropout layer.
+
+        Parameters
+        ----------
+        rate : float or int
+            The dropout rate, representing the fraction of input units to drop (set to zero) during training.
+            Must be between 0 and 1.
         """
         self.rate = 1 - rate
 
+    def __str__(self):
+        return f"Layer_Dropout(): dropout rate: {1 - self.rate:.3f}"
+
     def forward(self, inputs: Float64Array2D, training: bool) -> None:
         """
-        - divide the mask by the rate to scale the values.
+        Perform the forward pass for the Dropout layer.
+
+        During training, randomly sets a fraction of input units to zero and scales the remaining units.
+        During inference, the input is returned unchanged.
+
+        Parameters
+        ----------
+        inputs : np.ndarray
+            Input data to the layer.
+        training : bool
+            Whether the layer is in training mode.
+
+        Returns
+        -------
+        None
         """
         self.inputs = inputs
         if not training:
@@ -161,6 +210,20 @@ class LayerDropout:
         self.output = self.inputs * self.binary_mask
 
     def backward(self, dvalues: Float64Array2D) -> None:
+        """
+        Perform the backward pass for the Dropout layer.
+
+        Multiplies the incoming gradient by the same binary mask used during the forward pass.
+
+        Parameters
+        ----------
+        dvalues : np.ndarray
+            Gradient of the loss with respect to the output of this layer.
+
+        Returns
+        -------
+        None
+        """
         self.dinputs = dvalues * self.binary_mask
 
 

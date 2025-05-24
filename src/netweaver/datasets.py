@@ -3,16 +3,16 @@ import urllib
 import urllib.request
 from zipfile import ZipFile
 
-import cv2
+import matplotlib.image as mpimg
 import numpy as np
 from pympler import asizeof
 
-from ._internal_utils import _create_directory
+from ._internal_utils import _create_directory, get_cwd, join_path
 
 
-def _load_mnist_dataset(path, dataset) -> tuple[np.ndarray, np.ndarray]:
+def _load_data(path, dataset) -> tuple[np.ndarray, np.ndarray]:
     """
-    Loads images and labels from a specified MNIST dataset directory.
+    Loads images and labels from a specified dataset directory.
 
     This function reads all images and their corresponding labels from the given dataset folder and returns them as numpy arrays.
 
@@ -33,9 +33,7 @@ def _load_mnist_dataset(path, dataset) -> tuple[np.ndarray, np.ndarray]:
     gtruth = []
     for label in labels:
         for file in os.listdir(os.path.join(path, dataset, label)):
-            image = cv2.imread(
-                os.path.join(path, dataset, label, file), cv2.IMREAD_UNCHANGED
-            )  # pass (cv2.IMREAD_UNCHANGED or -1) else it duplicates the same value for all channels resulting image shape (28, 28, 3)
+            image = mpimg.imread(os.path.join(path, dataset, label, file))
             instances.append(image)
             gtruth.append(label)
     return np.array(instances, dtype=np.float32), np.array(gtruth, dtype=np.uint8)
@@ -66,7 +64,7 @@ def _summary_dataset(instances_train: np.ndarray, gtruth_train: np.ndarray, inst
     """Summarizes key properties of training and testing datasets.
 
     This function takes training and testing data and labels as input, then computes and
-    formats a summary of their key properties, including instance count, shape, data type,
+    formats a summary of their key properties, including instance count, shape of dataset, shape of instance, data type,
     and memory usage.
 
     Parameters
@@ -112,12 +110,12 @@ def _summary_dataset(instances_train: np.ndarray, gtruth_train: np.ndarray, inst
     return "\n".join(output_text)
 
 
-def create_data_mnist(path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Creates training and testing data for the MNIST dataset.
+def load_dataset(path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Creates training and testing data for the dataset (path).
 
-    This function loads the MNIST dataset from the specified directory, which must contain
-    'train' and 'test' subdirectories. It reads the images and their corresponding labels
-    from these subdirectories and returns them as numpy arrays.
+    This function loads the dataset from the specified directory, which must contain
+    'train' and 'test' subdirectories. Each sample or instances should be placed in a folder named after its label indices (zero-based indexing).
+    The function reads all images and their associated labels from these subdirectories, prints Summarization and returns them as numpy arrays.
 
     Parameters
     ----------
@@ -133,8 +131,8 @@ def create_data_mnist(path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndar
         - Testing data (instances_test)
         - Testing labels (gtruth_test)
     """
-    instances_train, gtruth_train = _load_mnist_dataset(path, "train")
-    instances_test, gtruth_test = _load_mnist_dataset(path, "test")
+    instances_train, gtruth_train = _load_data(path, "train")
+    instances_test, gtruth_test = _load_data(path, "test")
 
     print(_summary_dataset(instances_train, gtruth_train, instances_test, gtruth_test))
     return instances_train, gtruth_train, instances_test, gtruth_test
@@ -184,7 +182,7 @@ def _download_file(url: str, file_name: str) -> None:
     urllib.request.urlretrieve(url, file_name)
 
 
-def download_fashion_mnist_dataset(project_root_path) -> None:
+def download_fashion_mnist_dataset(path_project_root=get_cwd()) -> None:
     """
     Downloads and sets up the Fashion MNIST dataset.
 
@@ -194,33 +192,34 @@ def download_fashion_mnist_dataset(project_root_path) -> None:
 
     Parameters
     ----------
-    project_root_path : str
-        The path to the root directory of the project.
-    returns
+    path_project_root : str, Optional
+        The path to the root directory of the project. by default current working directory.
+
+    Returns
     -------
     None
         This function does not return anything. It creates a directory and downloads files.
     """
     folder = "fashion_mnist_images"
 
-    # cwd_path = os.getcwd()
-    # dataset_pdir_path = (
-    #     os.path.dirname(os.path.dirname(cwd_path))
-    #     if "src/netweaver" in cwd_path
-    #     else cwd_path
-    # ) idea: find the project root by .venv folder. using os.exectuables, prfix or path
-    datasetdir_path = f"{project_root_path}/datasets"
-    # checks for "datasets" directory in project directory, if not. It creates one.
-    # if not os.path.isdir(datasetdir_path):
-    #     os.mkdir(datasetdir_path)
+    datasetdir_path = join_path(path_project_root, "datasets")
     _create_directory(datasetdir_path)
 
-    if not os.path.isdir(f"{datasetdir_path}/{folder}"):
-        url = "https://nnfs.io/datasets/fashion_mnist_images.zip"
-        file = "fashion_mnist_images.zip"
-        _download_file(url, f"{datasetdir_path}/{file}")
-
-        _extract_file(f"{datasetdir_path}/{file}", f"{datasetdir_path}/{folder}")
-        print("please add datasets/ dir to .gitignore file if versioned")
+    if not os.path.isdir(join_path(datasetdir_path, folder)):
+        _download_extract_fashion_mnist(datasetdir_path, folder)
     else:
-        print(f"Fashion_mnish_dataset is already available in {datasetdir_path}/{folder}")
+        print(f"Fashion_mnish_dataset is already available in {join_path(datasetdir_path, folder)}")
+
+
+# TODO Rename this here and in `download_fashion_mnist_dataset`
+def _download_extract_fashion_mnist(datasetdir_path, folder):
+    url = "https://nnfs.io/datasets/fashion_mnist_images.zip"
+    file = "fashion_mnist_images.zip"
+
+    path_download_zipfile = join_path(datasetdir_path, file)
+    _download_file(url, path_download_zipfile)
+
+    path_extract_folder = join_path(datasetdir_path, folder)
+    _extract_file(path_download_zipfile, path_extract_folder)
+
+    print(f"Please add datasets/ dir to .gitignore file if versioned\nFashion MNIST cooked and available in: {path_extract_folder}")

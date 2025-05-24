@@ -121,6 +121,9 @@ class LossCategoricalCrossentropy(Loss):
         self.dinputs = -y_true / dvalues
         self.dinputs = self.dinputs / samples
 
+    def __str__(self):
+        return "Loss_CategoricalCrossEntropy()"
+
 
 class LossBinaryCrossentropy(Loss):
     """
@@ -163,6 +166,9 @@ class LossBinaryCrossentropy(Loss):
         self.dinputs = -((y_true / clipped_dvalues) - ((1 - y_true) / (1 - clipped_dvalues))) / outputs
         self.dinputs /= samples
 
+    def __str__(self):
+        return "Loss_BinaryCrossEntropy()"
+
 
 class LossMeanSquaredError(Loss):
     """
@@ -189,6 +195,9 @@ class LossMeanSquaredError(Loss):
         outputs = len(dvalues[0])
         self.dinputs = -2 * (y_true - dvalues) / outputs  # wonder log and negative missing. it's cancelled out. look into MLE.
         self.dinputs = self.dinputs / samples
+
+    def __str__(self):
+        return "Loss_MeanSquaredError()"
 
 
 class LossMeanAbsoluteError(Loss):
@@ -221,6 +230,9 @@ class LossMeanAbsoluteError(Loss):
         outputs = len(dvalues[0])
         self.dinputs = -np.sign(y_true - dvalues) / outputs  # np.sign returns -1 (<0) 0 (=0) 1 (>0)
         self.dinputs = self.dinputs / samples
+
+    def __str__(self):
+        return "Loss_MeanAbsoluteError()"
 
 
 LossTypes = Union[

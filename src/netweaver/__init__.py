@@ -5,7 +5,7 @@ from .activation_layers import (
     ActivationSigmoid,
     ActivationSoftmax,
 )
-from .datasets import create_data_mnist, download_fashion_mnist_dataset
+from .datasets import download_fashion_mnist_dataset, load_dataset
 from .layers import LayerDense, LayerDropout
 from .lossfunctions import (
     LossBinaryCrossentropy,
@@ -15,6 +15,7 @@ from .lossfunctions import (
 )
 from .model import Model
 from .optimizers import OptimizerAdagrad, OptimizerAdam, OptimizerRMSprop, OptimizerSGD
+from .utils import PlotTraining
 
 __all__ = [
     "Model",
@@ -34,6 +35,7 @@ __all__ = [
     "OptimizerAdam",
     "AccuracyCategorical",
     "AccuracyRegression",
-    "create_data_mnist",
+    "load_dataset",
     "download_fashion_mnist_dataset",
+    "PlotTraining",
 ]

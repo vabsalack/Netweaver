@@ -49,6 +49,9 @@ class OptimizerSGD:
         """Increments the iteration counter."""
         self.iterations += 1
 
+    def __str__(self):
+        return f"Optimizer_SGD(): Learning_Rate: {self.learning_rate}| Decay_rate: {self.decay}| Momentum: {self.momentum}"
+
 
 class OptimizerAdagrad:
     """
@@ -87,6 +90,9 @@ class OptimizerAdagrad:
         """Increments the iteration counter."""
         self.iterations += 1
 
+    def __str__(self):
+        return f"Optimizer_Adagrad(): Learning_Rate: {self.learning_rate}| Decay_rate: {self.decay}"
+
 
 class OptimizerRMSprop:
     """
@@ -123,7 +129,7 @@ class OptimizerRMSprop:
         if not hasattr(layer, "weight_cache"):
             layer.weight_cache = np.zeros_like(layer.weights)
             layer.bias_cache = np.zeros_like(layer.biases)
-        layer.weight_cache = self.beta * layer.weight_cache + (1 - self.beta) * layer.dweights**2
+        layer.weight_cache += self.beta * layer.weight_cache + (1 - self.beta) * layer.dweights**2
         layer.bias_cache += self.beta * layer.bias_cache + (1 - self.beta) * layer.dbiases**2
         layer.weights += -self.current_learning_rate * layer.dweights / (np.sqrt(layer.weight_cache) + self.epsilon)
         layer.biases += -self.current_learning_rate * layer.dbiases / (np.sqrt(layer.bias_cache) + self.epsilon)
@@ -131,6 +137,9 @@ class OptimizerRMSprop:
     def post_update_params(self) -> None:
         """Increments the iteration counter."""
         self.iterations += 1
+
+    def __str__(self):
+        return f"Optimizer_RMSprop(): Learning_Rate: {self.learning_rate}| Decay_rate: {self.decay}| Beta: {self.beta}"
 
 
 class OptimizerAdam:
@@ -171,7 +180,8 @@ class OptimizerAdam:
         self.iterations = 0
         self.epsilon = epsilon
         self.beta_1 = beta_1
-        self.beta_2 = beta_2
+        self.beta_2 = beta_2  # consider 1e-6 learning rate gives insignificant impact on gradient update
+        self.count_valued_steps = f"{(((self.learning_rate / 1e-6) - 1) / self.decay):,}" if self.decay else "decay rate is 0"
 
     def pre_update_params(self) -> None:
         """Updates the learning rate based on the decay parameter."""
@@ -219,6 +229,12 @@ class OptimizerAdam:
     def post_update_params(self) -> None:
         """Increments the iteration counter."""
         self.iterations += 1
+
+    def __str__(self):
+        return (
+            f"Optimizer_Adam(): Learning_Rate: {self.learning_rate}| Decay_rate: {self.decay}| Beta_1: {self.beta_1}| Beta_2: {self.beta_2}|"
+            + f" valued steps: {self.count_valued_steps}"
+        )
 
 
 OptimizerTypes = Union[OptimizerAdagrad, OptimizerAdam, OptimizerRMSprop, OptimizerSGD]

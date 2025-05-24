@@ -9,7 +9,7 @@ from tqdm.auto import tqdm
 from ._internal_utils import append_log_file, create_log_dir, create_log_file, get_cwd, get_datetime, join_path
 from .accuracy import AccuracyTypes
 from .activation_layers import ActivationSoftmax, ActivationTypes
-from .layers import LayerInput, LayerTypes, TrainableLayerTypes
+from .layers import LayerTypes, TrainableLayerTypes, _LayerInput
 from .lossfunctions import LossCategoricalCrossentropy, LossTypes
 from .optimizers import OptimizerTypes
 from .softmax_cce_loss import ActivationSoftmaxLossCategoricalCrossentropy
@@ -26,7 +26,7 @@ class Model:
 
     def __init__(self) -> None:
         """
-        Initialize the model with an empty list of layers and no softmax classifier output.
+        Initialize the model with an empty list of layers, no softmax classifier output,no now storing datetime object and path model log storing path
 
         Parameters
         ----------
@@ -108,7 +108,7 @@ class Model:
         -------
         None
         """
-        self.input_layer = LayerInput()
+        self.input_layer = _LayerInput()
         self.trainable_layers: list[TrainableLayerTypes] = []
         layer_count = len(self.layers)
 
@@ -131,6 +131,33 @@ class Model:
         if isinstance(self.layers[-1], ActivationSoftmax) and isinstance(self.loss, LossCategoricalCrossentropy):
             self.softmax_classifier_output = ActivationSoftmaxLossCategoricalCrossentropy()
 
+        print(self.summary())
+
+    def summary(self):
+        """
+        Returns a summary of the model architecture and trainable parameters.
+
+        This method provides a string representation of all layers, loss, optimizer, accuracy objects,
+        and the total number of trainable parameters in the model.
+
+        Returns
+        -------
+        str
+            A summary string describing the model architecture and trainable parameters.
+        """
+        count_trainable_params = sum(layer.count_trainable_params for layer in self.trainable_layers)
+        seperator_heavy = "\n\n" + "=" * 120 + "\n\n"
+        seperator_light = "\n" + "-" * 120 + "\n"
+        return (
+            seperator_heavy
+            + f"{seperator_light}".join(f"# {str(layer)}" for layer in self.layers)
+            + seperator_heavy
+            + f"{seperator_light}".join(f"# {str(teacher)}" for teacher in [self.loss, self.optimizer, self.accuracy])
+            + seperator_heavy
+            + f"Total trainable Params: {count_trainable_params:,}"
+            + seperator_heavy
+        )
+
     def train(
         self, instances_train, gtruth_train, *, epochs=1, batch_size=None, print_epoch_summary=False, validation_data=None, path_log=get_cwd()
     ) -> None:
@@ -150,10 +177,12 @@ class Model:
             Number of training epochs, by default 1.
         batch_size : int, optional (keyword-only argument)
             Size of each mini-batch, by default None (uses the entire dataset).
-        print_every : int, optional (keyword-only argument)
-            Frequency of printing training progress (in steps), by default 1.
+        print_epoch_summary : bool, optional (keyword-only argument)
+            Whether to print epoch summary, by default False.
         validation_data : tuple, optional (keyword-only argument)
             Validation data as a tuple (instances_validation, gtruth_validation), by default None.
+        path_log : str, optional (keyword-only argument)
+            Path for logging, by default current working directory.
 
         Returns
         -------
@@ -161,6 +190,8 @@ class Model:
         """
         self.now = get_datetime()
         self.path_model_log = create_log_dir(log_path=path_log, now=self.now)
+        self._save_model_architecture()
+
         field_dict_epoch = {
             "epoch": None,
             "learning_rate": None,
@@ -201,12 +232,12 @@ class Model:
             train_steps = len(instances_train) // batch_size
             if train_steps * batch_size < len(instances_train):
                 train_steps += 1
-
-        for epoch in tqdm(range(1, epochs + 1), desc="Traning: ", unit="epoch"):
+        tqdm_desc_training = "Training"
+        for epoch in tqdm(range(1, epochs + 1), desc=f"{tqdm_desc_training:<15}: ", unit="epoch"):
             self.loss.new_pass()  # for accumulated sum and count to compute loss over an epoch
             self.accuracy.new_pass()  # for accumulated sum and count for accuracies
-
-            for step in tqdm(range(1, train_steps + 1), desc=f"Epoch {epoch}: ", leave=False, unit="batch"):
+            tqdm_desc_epoch = f"Epoch {epoch:,}"
+            for step in tqdm(range(1, train_steps + 1), desc=f"{tqdm_desc_epoch:<14}: ", leave=False, unit="batch"):
                 # Get the current batch
                 if batch_size is None:
                     batch_instances_train = instances_train
@@ -216,7 +247,7 @@ class Model:
                     batch_gtruth_train = gtruth_train[(step - 1) * batch_size : step * batch_size]
 
                 # Perform forward pass
-                output = self.forward(batch_instances_train, training=True)
+                output = self._forward(batch_instances_train, training=True)
 
                 # Calculate loss
                 data_loss, regularization_loss = self.loss.calculate(output, batch_gtruth_train, include_regularization=True)
@@ -227,22 +258,11 @@ class Model:
                 accuracy = self.accuracy.calculate(predictions, batch_gtruth_train)
 
                 # Perform backward pass
-                self.backward(output, batch_gtruth_train)
+                self._backward(output, batch_gtruth_train)
 
                 # Update weights and biases
-                self.optimizer_action()
+                self._optimizer_action()
 
-                # Print Batch training progress
-                # if not step % print_every or step == train_steps - 1:
-                # print(
-                #     f"step: {step:<10}"
-                #     + f"acc: {accuracy:<10.3f}"
-                #     + f"loss: {loss:<10.3f}"
-                #     + f"data_loss: {data_loss:<10.3f}"
-                #     + f"reg_loss: {regularization_loss:<10.3f}"
-                #     + f"lr: {self.optimizer.current_learning_rate:<10.7f}"
-                # )
-                # ...
                 field_dict_batch["epoch"] = epoch
                 field_dict_batch["xaxis_value"] = epoch + ((1 / train_steps) * (step - 1))
                 field_dict_batch["step"] = step
@@ -278,7 +298,7 @@ class Model:
 
             # Perform validation if validation data is provided
             if validation_data is not None:
-                loss_validation, accuracy_validation = self.evaluate(*validation_data, batch_size=batch_size)
+                loss_validation, accuracy_validation = self._evaluate(*validation_data, batch_size=batch_size)
 
                 field_dict_validation["epoch"] = epoch
                 field_dict_validation["loss_validation"] = loss_validation
@@ -286,7 +306,7 @@ class Model:
 
                 append_log_file(path_file=path_validation_log, field_names=field_dict_validation.keys(), field_values=field_dict_validation)
 
-    def forward(
+    def _forward(
         self,
         instances: ArrayLike,
         training: bool,
@@ -294,12 +314,17 @@ class Model:
         """
         Perform a forward pass through the model.
 
-        Args:
-            instances: Input data.
-            training: Whether the model is in training mode.
+        Parameters
+        ----------
+        instances : ArrayLike
+            Input data to be passed through the model.
+        training : bool
+            Whether the model is in training mode. Some layers (e.g., Dropout) behave differently during training.
 
-        Returns:
-            Output of the last layer.
+        Returns
+        -------
+        Float64Array2D
+            Output of the last layer (output activation layer).
         """
         self.input_layer.forward(instances, training)
         for layer in self.layers:
@@ -307,13 +332,20 @@ class Model:
 
         return layer.output
 
-    def backward(self, output, gtruth):
+    def _backward(self, output, gtruth):
         """
         Perform a backward pass through the model.
 
-        Args:
-            output: Output of the last layer.
-            gtruth: True labels.
+        Parameters
+        ----------
+        output : np.ndarray
+            Output of the last layer (predictions).
+        gtruth : np.ndarray
+            Ground truth labels.
+
+        Returns
+        -------
+        None
         """
         if self.softmax_classifier_output is not None:
             self.softmax_classifier_output.backward(output, gtruth)
@@ -326,20 +358,43 @@ class Model:
         for layer in reversed(self.layers):
             layer.backward(layer.next.dinputs)
 
-    def optimizer_action(self):
+    def _optimizer_action(self):
+        """
+        Update the parameters of all trainable layers using the optimizer.
+
+        This method performs pre-update, parameter update, and post-update steps for each trainable layer.
+        It is typically called after the backward pass during training.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         self.optimizer.pre_update_params()
         for layer in self.trainable_layers:
             self.optimizer.update_params(layer)
         self.optimizer.post_update_params()
 
-    def evaluate(self, instances_validation, gtruth_validation, *, batch_size=None):
+    def _evaluate(self, instances_validation, gtruth_validation, *, batch_size=None):
         """
         Evaluate the model on validation data.
 
-        Args:
-            instances_validation: Validation input data.
-            gtruth_validation: Validation true labels.
-            batch_size: Batch size for evaluation.
+        Parameters
+        ----------
+        instances_validation : ArrayLike
+            Validation input data.
+        gtruth_validation : ArrayLike
+            Validation ground truth labels.
+        batch_size : int, optional
+            Batch size for evaluation. If None, evaluates on the entire dataset.
+
+        Returns
+        -------
+        tuple
+            Tuple containing validation loss and validation accuracy.
         """
         validation_steps = 1
         if batch_size is not None:
@@ -355,7 +410,7 @@ class Model:
             else:
                 batch_instances_validation = instances_validation[step * batch_size : (step + 1) * batch_size]
                 batch_gtruth_validation = gtruth_validation[step * batch_size : (step + 1) * batch_size]
-            output = self.forward(batch_instances_validation, training=False)  # making dropout layers out of the loop
+            output = self._forward(batch_instances_validation, training=False)  # making dropout layers out of the loop
             self.loss.calculate(output, batch_gtruth_validation)
             predictions = self.output_layer_activation.predictions(output)
             self.accuracy.calculate(predictions, batch_gtruth_validation)
@@ -371,12 +426,17 @@ class Model:
         """
         Generate predictions for the given input data.
 
-        Args:
-            instances_prediction: Input data.
-            batch_size: Batch size for prediction.
+        Parameters
+        ----------
+        instances_prediction : ArrayLike
+            Input data for which predictions are to be made.
+        batch_size : int, optional
+            Batch size for prediction. If None, predicts on the entire dataset.
 
-        Returns:
-            Predicted outputs.
+        Returns
+        -------
+        np.ndarray
+            The model's predictions (confidences) for the input data. If batch_size given, the output is vertical stack of batches.
         """
         prediction_steps = 1
         if batch_size is not None:
@@ -389,25 +449,38 @@ class Model:
                 batch_instances_prediction = instances_prediction
             else:
                 batch_instances_prediction = instances_prediction[step * batch_size : (step + 1) * batch_size]
-            batch_output = self.forward(batch_instances_prediction, training=False)  # making dropout layer out of loop
+            batch_output = self._forward(batch_instances_prediction, training=False)  # making dropout layer out of loop
             output.append(batch_output)
-        return np.vstack(output)  # Each row is a batch's prediction. Each value in the row is the prediction of a sample in a batch
+        return np.vstack(output)
 
     def _get_parameters(self):
         """
         Get the parameters (weights and biases) of all trainable layers.
 
-        Returns:
-            List of parameters for each trainable layer.
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list
+            List of parameters (tuple (weights, biases)) for each trainable layer.
         """
         return [layer.get_parameters() for layer in self.trainable_layers]
 
     def save_parameters(self):
         """
-        Save the parameters (weights and biases) of the model to a file.
+        Save the parameters of all trainable layers to a file. List(Tuple(weights, biases))
 
-        Args:
-            path: Path to the file where parameters will be saved.
+        The parameters are saved as a pickle file in the model's log directory with a timestamped filename.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         if self.now is not None and self.path_model_log is not None:
             path_pickle_file = join_path(self.path_model_log, f"params-pkl-{self.now:%Y%m%d-%H%M%S}.pkl")
@@ -423,8 +496,14 @@ class Model:
         """
         Set the parameters (weights and biases) for all trainable layers.
 
-        Args:
-            parameters: List of parameters for each trainable layer.
+        Parameters
+        ----------
+        parameters : list
+            List of parameters for each trainable layer.
+
+        Returns
+        -------
+        None
         """
         for parameter_set, layer in zip(parameters, self.trainable_layers):
             layer.set_parameters(*parameter_set)
@@ -433,19 +512,19 @@ class Model:
         """
         Load the parameters (weights and biases) of the model from a file.
 
-        Args:
-            path: Path to the file from which parameters will be loaded.
+        Parameters
+        ----------
+        path : str
+            Path to the file from which parameters will be loaded.
+
+        Returns
+        -------
+        None
         """
         with open(path, "rb") as f:
             self._set_parameters(pickle.load(f))
 
-    def save(self, path):
-        """
-        Save the entire model to a file.
-
-        Args:
-            path: Path to the file where the model will be saved.
-        """
+    def _dump_model(self, path_model_file):
         model: Model = copy.deepcopy(self)
         # Reset accumulated values in loss and accuracy objects
         model.loss.new_pass()
@@ -455,18 +534,60 @@ class Model:
         for layer in model.layers:
             for property in ["inputs", "output", "dinputs", "dweights", "dbiases"]:
                 layer.__dict__.pop(property, None)
-        with open(path, "wb") as f:
+        with open(path_model_file, "wb") as f:
             pickle.dump(model, f)
 
+    def _save_model_architecture(self):
+        """
+        Save the model architecture summary to a file.
+
+        This method writes the model's architecture summary to a timestamped text file
+        in the model's log directory.
+
+        Returns
+        -------
+        None
+        """
+        path_model_archi_file = join_path(self.path_model_log, f"model-architecture-{self.now:%Y%m%d-%H%M%S}.txt")
+        with open(path_model_archi_file, "w") as file:
+            file.write(self.summary())
+        print(f"Model Architecture file: {path_model_archi_file}")
+
+    def save_model(self):
+        """
+        Save the entire model to a file.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+        if self.now is None or self.path_model_log is None:
+            return
+        path_model_file = join_path(self.path_model_log, f"model-{self.now:%Y%m%d-%H%M%S}.model")
+        try:
+            self._dump_model(path_model_file)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        else:
+            print(f"model saved successfully\nmodel file: {path_model_file}")
+
     @staticmethod
-    def load(path):
+    def load_model(path):
         """
         Load a model from a file.
 
-        Args:
-            path: Path to the file from which the model will be loaded.
+        Parameters
+        ----------
+        path : str
+            Path to the file from which the model will be loaded.
 
-        Returns:
+        Returns
+        -------
+        Model
             The loaded model.
         """
         with open(path, "rb") as f:

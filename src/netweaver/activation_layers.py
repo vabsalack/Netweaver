@@ -27,6 +27,9 @@ class ActivationReLU:
     def predictions(self, outputs: Float64Array2D) -> Float64Array2D:
         return outputs
 
+    def __str__(self):
+        return "Activation_ReLu()"
+
 
 class ActivationSoftmax:
     """
@@ -59,6 +62,9 @@ class ActivationSoftmax:
 
     def predictions(self, outputs: Float64Array2D) -> np.ndarray[Tuple[int], np.dtype[np.int64]]:
         return np.argmax(outputs, axis=1)
+
+    def __str__(self):
+        return "Activation_Softmax()"
 
 
 class ActivationSigmoid:
@@ -93,6 +99,9 @@ class ActivationSigmoid:
         """
         return (outputs > 0.5) * 1
 
+    def __str__(self):
+        return "Activation_Sigmoid()"
+
 
 class ActivationLinear:
     """
@@ -115,6 +124,9 @@ class ActivationLinear:
 
     def predictions(self, outputs: Float64Array2D) -> Float64Array2D:
         return outputs
+
+    def __str__(self):
+        return "Activation_Linear()"
 
 
 ActivationTypes = Union[ActivationSoftmax, ActivationLinear, ActivationReLU, ActivationSigmoid]
