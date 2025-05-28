@@ -55,6 +55,10 @@ class LayerDense:
             L1 regularization strength for biases
         bias_regularizer_l2 : float, default=0.0
             L2 regularization strength for biases
+
+        Returns
+        -------
+        None
         """
         self.n_inputs = n_inputs
         self.n_neurons = n_neurons
@@ -85,6 +89,10 @@ class LayerDense:
             Input data.
         training : bool
             Whether the layer is in training mode (unused in this layer).
+
+        Returns
+        -------
+        None
         """
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
@@ -98,6 +106,10 @@ class LayerDense:
         ----------
         dvalues : numpy.ndarray
             Gradients of the loss with respect to the layer's output.
+
+        Returns
+        -------
+        None
         """
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
@@ -120,6 +132,10 @@ class LayerDense:
     def get_parameters(self) -> Tuple[Float64Array2D, Float64Array2D]:
         """Returns the layer's parameters (weights and biases).
 
+        Parameters
+        ----------
+        None
+
         Returns
         -------
         tuple
@@ -136,6 +152,10 @@ class LayerDense:
             Weights to set.
         biases : numpy.ndarray
             Biases to set.
+
+        Returns
+        -------
+        None
         """
         self.weights = weights
         self.biases = biases
@@ -147,25 +167,6 @@ class LayerDropout:
 
     This layer randomly sets a fraction of input units to zero during training to help prevent overfitting.
     The fraction of units dropped is determined by the dropout rate provided at initialization.
-
-    Parameters
-    ----------
-    rate : float or int
-        The dropout rate, representing the fraction of input units to drop (set to zero) during training.
-        Must be between 0 and 1.
-
-    Attributes
-    ----------
-    rate : float
-        The probability of keeping a unit active (1 - dropout rate).
-    binary_mask : np.ndarray
-        The mask applied to the input during training to drop units.
-    inputs : np.ndarray
-        The input data to the layer.
-    output : np.ndarray
-        The output after applying dropout.
-    dinputs : np.ndarray
-        The gradient of the loss with respect to the input.
     """
 
     def __init__(self, rate: Union[float, int]) -> None:
@@ -178,7 +179,8 @@ class LayerDropout:
             The dropout rate, representing the fraction of input units to drop (set to zero) during training.
             Must be between 0 and 1.
         """
-        self.rate = 1 - rate
+
+        self.rate = 1 - rate  # The probability of keeping a unit active (1 - dropout rate).
 
     def __str__(self):
         return f"Layer_Dropout(): dropout rate: {1 - self.rate:.3f}"
@@ -206,7 +208,9 @@ class LayerDropout:
             self.output = inputs.copy()
             return
         rng = np.random.default_rng()
-        self.binary_mask = rng.binomial(1, self.rate, size=self.inputs.shape) / self.rate
+        self.binary_mask = (
+            rng.binomial(1, self.rate, size=self.inputs.shape) / self.rate
+        )  # The mask applied to the input during training to drop units.
         self.output = self.inputs * self.binary_mask
 
     def backward(self, dvalues: Float64Array2D) -> None:

@@ -30,6 +30,10 @@ class PlotTraining:
             Path to the validation log CSV file.
         path_batch_log : str, optional
             Path to the batch log CSV file.
+
+        Returns
+        -------
+        None
         """
         self.path_epoch_log = path_epoch_log
         self.path_validation_log = path_validation_log
@@ -258,14 +262,34 @@ class PlotTraining:
 
     def pause(self):
         """
-        Pauses the live animation if it is running.
+        Pauses the live animation if it is currently running.
+
+        This method temporarily halts the live plot updates until resumed.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         if self.ani is not None:
             self.ani.pause()
 
     def resume(self):
         """
-        Resumes the live animation if it is paused.
+        Resumes the live animation if it is currently paused.
+
+        This method restarts the live plot updates after being paused.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
         if self.ani is not None:
             self.ani.event_source.start()

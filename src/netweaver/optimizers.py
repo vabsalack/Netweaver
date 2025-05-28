@@ -20,6 +20,22 @@ class OptimizerSGD:
     """
 
     def __init__(self, learning_rate: float = 1.0, decay: float = 0.0, momentum: float = 0.0) -> None:
+        """
+        Initializes the SGD optimizer with optional learning rate decay and momentum.
+
+        Parameters
+        ----------
+        learning_rate : float, optional
+            The initial learning rate, by default 1.0.
+        decay : float, optional
+            The learning rate decay factor, by default 0.0.
+        momentum : float, optional
+            The momentum factor, by default 0.0.
+
+        Returns
+        -------
+        None
+        """
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -27,10 +43,37 @@ class OptimizerSGD:
         self.momentum = momentum
 
     def pre_update_params(self):
+        """
+        Updates the current learning rate based on the decay parameter.
+
+        If decay is set, the learning rate is adjusted according to the number of iterations.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1.0 / (1.0 + self.decay * self.iterations))  # 1/x graph
 
     def update_params(self, layer: LayerDense) -> None:
+        """
+        Updates the parameters of the given layer using SGD with optional momentum.
+
+        This method applies either vanilla SGD updates or momentum-based updates to the layer's weights and biases.
+
+        Parameters
+        ----------
+        layer : LayerDense
+            The layer whose parameters will be updated.
+
+        Returns
+        -------
+        None
+        """
         if self.momentum:
             if not hasattr(layer, "weight_momentums"):
                 layer.weight_momentums = np.zeros_like(layer.weights)
@@ -46,10 +89,30 @@ class OptimizerSGD:
         layer.biases += bias_updates
 
     def post_update_params(self) -> None:
-        """Increments the iteration counter."""
+        """
+        Increments the iteration counter after parameter updates.
+
+        This method should be called after updating parameters in each training step.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         self.iterations += 1
 
     def __str__(self):
+        """
+        Returns a string representation of the OptimizerSGD object.
+
+        Returns
+        -------
+        str
+            The string representation of the object.
+        """
         return f"Optimizer_SGD(): Learning_Rate: {self.learning_rate}| Decay_rate: {self.decay}| Momentum: {self.momentum}"
 
 
@@ -66,6 +129,22 @@ class OptimizerAdagrad:
     """
 
     def __init__(self, learning_rate: float = 1.0, decay: float = 0.0, epsilon: float = 1e-7) -> None:
+        """
+        Initializes the Adagrad optimizer with optional learning rate decay and epsilon for numerical stability.
+
+        Parameters
+        ----------
+        learning_rate : float, optional
+            The initial learning rate, by default 1.0.
+        decay : float, optional
+            The learning rate decay factor, by default 0.0.
+        epsilon : float, optional
+            A small value to prevent division by zero, by default 1e-7.
+
+        Returns
+        -------
+        None
+        """
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
@@ -73,11 +152,37 @@ class OptimizerAdagrad:
         self.epsilon = epsilon
 
     def pre_update_params(self) -> None:
-        """Updates the learning rate based on the decay parameter."""
+        """
+        Updates the current learning rate based on the decay parameter.
+
+        If decay is set, the learning rate is adjusted according to the number of iterations.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1.0 / (1.0 + self.decay * self.iterations))
 
     def update_params(self, layer: LayerDense) -> None:
+        """
+        Updates the parameters of the given layer using the Adagrad optimization algorithm.
+
+        This method adapts the learning rate for each parameter based on the sum of the squares of past gradients.
+
+        Parameters
+        ----------
+        layer : LayerDense
+            The layer whose parameters will be updated.
+
+        Returns
+        -------
+        None
+        """
         if not hasattr(layer, "weight_cache"):
             layer.weight_cache = np.zeros_like(layer.weights)
             layer.bias_cache = np.zeros_like(layer.biases)
@@ -87,10 +192,34 @@ class OptimizerAdagrad:
         layer.biases += -self.current_learning_rate * layer.dbiases / (np.sqrt(layer.bias_cache) + self.epsilon)
 
     def post_update_params(self) -> None:
-        """Increments the iteration counter."""
+        """
+        Increments the iteration counter after parameter updates.
+
+        This method should be called after updating parameters in each training step.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         self.iterations += 1
 
     def __str__(self):
+        """
+        Returns a string representation of the OptimizerAdagrad object.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        str
+            The string representation of the object.
+        """
         return f"Optimizer_Adagrad(): Learning_Rate: {self.learning_rate}| Decay_rate: {self.decay}"
 
 
@@ -121,11 +250,37 @@ class OptimizerRMSprop:
         self.beta = beta
 
     def pre_update_params(self) -> None:
-        """Updates the learning rate based on the decay parameter."""
+        """
+        Updates the current learning rate based on the decay parameter.
+
+        If decay is set, the learning rate is adjusted according to the number of iterations.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1.0 / (1.0 + self.decay * self.iterations))
 
     def update_params(self, layer: LayerDense) -> None:
+        """
+        Updates the parameters of the given layer using the RMSprop optimization algorithm.
+
+        This method applies a decaying average of squared gradients to adapt the learning rate for each parameter.
+
+        Parameters
+        ----------
+        layer : LayerDense
+            The layer whose parameters will be updated.
+
+        Returns
+        -------
+        None
+        """
         if not hasattr(layer, "weight_cache"):
             layer.weight_cache = np.zeros_like(layer.weights)
             layer.bias_cache = np.zeros_like(layer.biases)
@@ -135,10 +290,34 @@ class OptimizerRMSprop:
         layer.biases += -self.current_learning_rate * layer.dbiases / (np.sqrt(layer.bias_cache) + self.epsilon)
 
     def post_update_params(self) -> None:
-        """Increments the iteration counter."""
+        """
+        Increments the iteration counter after parameter updates.
+
+        This method should be called after updating parameters in each training step.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         self.iterations += 1
 
     def __str__(self):
+        """
+        Returns a string representation of the OptimizerAdagrad object.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        str
+            The string representation of the object.
+        """
         return f"Optimizer_RMSprop(): Learning_Rate: {self.learning_rate}| Decay_rate: {self.decay}| Beta: {self.beta}"
 
 
@@ -159,7 +338,8 @@ class OptimizerAdam:
         beta_1: float = 0.9,
         beta_2: float = 0.999,
     ) -> None:
-        """Initializes the Adam optimizer.
+        """
+        Initializes the Adam optimizer with optional learning rate decay, epsilon for numerical stability, and beta parameters for moment estimates.
 
         Parameters
         ----------
@@ -173,6 +353,10 @@ class OptimizerAdam:
             The exponential decay rate for the first moment estimates, by default 0.9.
         beta_2 : float, optional
             The exponential decay rate for the second moment estimates, by default 0.999.
+
+        Returns
+        -------
+        None
         """
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
@@ -184,7 +368,19 @@ class OptimizerAdam:
         self.count_valued_steps = f"{(((self.learning_rate / 1e-6) - 1) / self.decay):,}" if self.decay else "decay rate is 0"
 
     def pre_update_params(self) -> None:
-        """Updates the learning rate based on the decay parameter."""
+        """
+        Updates the current learning rate based on the decay parameter.
+
+        If decay is set, the learning rate is adjusted according to the number of iterations.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1.0 / (1.0 + self.decay * self.iterations))
 
@@ -203,6 +399,10 @@ class OptimizerAdam:
         ----------
         layer : LayerDense
             The layer whose parameters to update.
+
+        Returns
+        -------
+        None
         """
 
         if not hasattr(layer, "weight_cache"):
@@ -227,10 +427,34 @@ class OptimizerAdam:
         layer.biases += bias_updates
 
     def post_update_params(self) -> None:
-        """Increments the iteration counter."""
+        """
+        Increments the iteration counter after parameter updates.
+
+        This method should be called after updating parameters in each training step.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         self.iterations += 1
 
     def __str__(self):
+        """
+        Returns a string representation of the OptimizerAdagrad object.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        str
+            The string representation of the object.
+        """
         return (
             f"Optimizer_Adam(): Learning_Rate: {self.learning_rate}| Decay_rate: {self.decay}| Beta_1: {self.beta_1}| Beta_2: {self.beta_2}|"
             + f" valued steps: {self.count_valued_steps}"

@@ -140,6 +140,10 @@ class Model:
         This method provides a string representation of all layers, loss, optimizer, accuracy objects,
         and the total number of trainable parameters in the model.
 
+        Parameters
+        ----------
+        None
+
         Returns
         -------
         str
@@ -525,6 +529,20 @@ class Model:
             self._set_parameters(pickle.load(f))
 
     def _dump_model(self, path_model_file):
+        """
+        Create a deep copy of the model and save it to a file.
+
+        This method resets accumulated values and removes unnecessary attributes from layers before pickling the model.
+
+        Parameters
+        ----------
+        path_model_file : str
+            Path to the file where the model will be saved.
+
+        Returns
+        -------
+        None
+        """
         model: Model = copy.deepcopy(self)
         # Reset accumulated values in loss and accuracy objects
         model.loss.new_pass()
@@ -543,6 +561,10 @@ class Model:
 
         This method writes the model's architecture summary to a timestamped text file
         in the model's log directory.
+
+        Parameters
+        ----------
+        None
 
         Returns
         -------

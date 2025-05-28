@@ -211,8 +211,25 @@ def download_fashion_mnist_dataset(path_project_root=get_cwd()) -> None:
         print(f"Fashion_mnish_dataset is already available in {join_path(datasetdir_path, folder)}")
 
 
-# TODO Rename this here and in `download_fashion_mnist_dataset`
 def _download_extract_fashion_mnist(datasetdir_path, folder):
+    """
+    Downloads and extracts the Fashion MNIST dataset zip file.
+
+    This function downloads the Fashion MNIST zip file from a predefined URL, saves it to the specified dataset directory,
+    and extracts its contents into the given folder.
+
+    Parameters
+    ----------
+    datasetdir_path : str
+        The path to the directory where the dataset zip file will be downloaded.
+    folder : str
+        The folder where the extracted files will be placed.
+
+    Returns
+    -------
+    None
+        This function does not return anything. It downloads and extracts the dataset.
+    """
     url = "https://nnfs.io/datasets/fashion_mnist_images.zip"
     file = "fashion_mnist_images.zip"
 

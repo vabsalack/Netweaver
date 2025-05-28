@@ -17,6 +17,19 @@ class ActivationSoftmaxLossCategoricalCrossentropy:
     """
 
     def __init__(self) -> None:
+        """
+        Initializes the combined softmax activation and categorical cross-entropy loss object.
+
+        This constructor sets up the internal softmax activation and loss function for efficient forward and backward passes.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         self.activation = ActivationSoftmax()
         self.loss = LossCategoricalCrossentropy()
 
@@ -48,6 +61,10 @@ class ActivationSoftmaxLossCategoricalCrossentropy:
             Input data.
         y_true : numpy.ndarray
             True labels.
+
+        Returns
+        -------
+        None
         """
         samples = len(dvalues)
         if len(y_true.shape) == 2:
