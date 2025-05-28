@@ -62,16 +62,16 @@ Here are some key features that make working with Netweaver both intuitive and p
 1. **Effortless Dataset Handling:**  
     Netweaver offers built-in utilities to download and extract the Fashion MNIST dataset, allowing you to jump straight into building and training neural networks without manual data preparation. 
     <p align="center">
-    <img src="doc/images/download.png" alt="download" />
+    <img src="store_room/images/download.png" alt="download" />
     </p>
 
 2. **Integrated Progress Monitoring:**  
     Training loops come with an embedded progress bar that displays real-time updates, including estimated time remaining for both epochs and batches. This provides clear visibility into training progress and helps manage expectations during long runs.
     <p align="center">
-    <img src="doc/images/trainingstart.png" alt="progressbar1" />
+    <img src="store_room/images/trainingstart.png" alt="progressbar1" />
     </p>
     <p align="center">
-    <img src="doc/images/training_complete.png" alt="progressbar2" />
+    <img src="store_room/images/training_complete.png" alt="progressbar2" />
     </p>
 
 3. **Real-Time Metric Visualization:**  
@@ -80,13 +80,13 @@ Here are some key features that make working with Netweaver both intuitive and p
     <table>
         <tr>
             <td align="center">
-                <img src="doc/images/graphstart.png" alt="Live metric animation" />
+                <img src="store_room/images/graphstart.png" alt="Live metric animation" />
             </td>
             <td align="center">
-                <img src="doc/images/graph_slide.png" alt="Scrolling metric graph" />
+                <img src="store_room/images/graph_slide.png" alt="Scrolling metric graph" />
             </td>
             <td align="center">
-                <img src="doc/images/statci_plot.png" alt="Static metric plot" />
+                <img src="store_room/images/statci_plot.png" alt="Static metric plot" />
             </td>
         </tr>
     </table>
@@ -94,7 +94,7 @@ Here are some key features that make working with Netweaver both intuitive and p
 4. **Organized Logging and Model Management:**  
     Each training session generates its own dedicated log folder. All logs and model files are automatically suffixed with a timestamp (`{now:%Y%m%d-%H%M%S}`), ensuring that results from different runs are kept separate and easy to compare. This organization simplifies experiment tracking and reproducibility.
     <p align="center">
-    <img src="doc/images/log_dir.png" alt="directorylog" />
+    <img src="store_room/images/log_dir.png" alt="directorylog" />
     </p>
 
 These features collectively make Netweaver a practical and educational tool for anyone interested in understanding and experimenting with neural networks.
@@ -136,7 +136,7 @@ These features collectively make Netweaver a practical and educational tool for 
 |   |-- extensions.json
 |   `-- settings.json
 |-- drawio
-|-- doc
+|-- store_room
 |-- tests
 |   |-- e2e
 |   |-- integration
@@ -204,6 +204,38 @@ Feel free to open issues for bugs, feature requests, or questions. Let's grow a 
 Thank you for helping make Netweaver better!
 
 ## 🫂 Author
+
+Netweaver was created as a side project to explore the deeper math behind neural networks and as a way to overcome boredom.
+If you're curious about the inspiration behind Netweaver, check out the awesome [Neural Networks from Scratch](https://nnfs.io/) book. That's where the spark for this project came from
+
+<table>
+    <tr>
+        <td width="90" align="center" valign="middle">
+            <img src="https://avatars.githubusercontent.com/u/106925970?s=400&u=d865191ad6c0063ca9c3576ae3cca1df9707b1a3&v=4" alt="Author photo" width="70"  />
+        </td>
+        <td valign="middle">
+            <b>keerthivasan</b>  
+            <br>
+            <a href="mailto:keerthi.pydev@gmail.com">Mail: Keerthi@gmail</a>  
+            <br>
+            <a href="https://github.com/vabsalack" target="_blank">GitHub: Vabsalack</a>
+            <br>
+            <a href="https://www.linkedin.com/in/keerthipydev">LinkedIn: Keerthivasan </a>
+        </td>
+    </tr>
+</table>
+
+### Contributors
+
+<table>
+    <tr>
+        <td>
+            <a href="https://github.com/vabsalack" target="_blank">Vabsalack</a>
+        </td> 
+    </tr>
+</table>
+
+
 ## 📄 License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE.txt) file for details.

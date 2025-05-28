@@ -9,16 +9,19 @@ wheels/
 # cache
 .cache/
 .pytest_cache/
+.ruff_cache
 
 # Virtual environments
 .venv
 
 # Datasets
-datasets/
-drawio/
+datasets
 
 #rough notes
-uriadi.md
+scribble.md
 
 # logs
 logs
+
+README_numpy.md
+README.en.md
