@@ -1,0 +1,59 @@
+{
+    // EDITOR SETTINGS
+    "ruff.importStrategy": "useBundled",
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "always",
+        "source.fixAll": "always"
+    },
+    "files.autoSave": "onFocusChange",
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    // "[toml]": {
+    //     "editor.defaultFormatter": "tamasfe.even-better-toml"
+    // },
+    // EXPLORER SETTINGS
+    "explorer.autoReveal": true,
+    // WORKBENCH SETTINGS
+    "workbench.colorTheme": "Default Dark Modern",
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.tabSizing": "shrink",
+    // TERMINAL SETTINGS
+    // "terminal.integrated.tabs.enabled": true,
+    // "terminal.integrated.tabs.hideCondition": "never",
+    // "terminal.integrated.tabs.location": "right",
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.minimumContrastRatio": 5,
+    "terminal.integrated.fontSize": 15,
+    "terminal.integrated.fontFamily": "MesloLGS NF",
+    "python.analysis.extraPaths": [
+        "./src"
+    ],
+    // MARKDOWN SETTINGS
+    // "markdown.preview.scrollEditorWithPreview": true,
+    // "markdown.preview.scrollPreviewWithEditor": true,
+    // PYTHON SETTINGS
+    // "python.analysis.autoSearchPaths": true,
+    // "python.analysis.diagnosticSeverityOverrides": {
+    //     "reportMissingImports": "none"
+    // },
+    // "python.analysis.extraPaths": [
+    //     "${workspaceFolder}/src"
+    // ],
+    // "python.envFile": "${workspaceFolder}/.env",
+    // "python.terminal.activateEnvironment": true,
+    // "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    // TEST SETTINGS
+    // "python.testing.pytestEnabled": true,
+    // "python.testing.unittestEnabled": false,
+    // "python.testing.cwd": "${workspaceFolder}/tests",
+    // "python.testing.pytestPath": "${workspaceFolder}/.venv/bin/pytest",
+    // "python.testing.autoTestDiscoverOnSaveEnabled": true,
+}

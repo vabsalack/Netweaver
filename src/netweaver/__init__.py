@@ -1,33 +1,41 @@
-from .model import Model
-from .layers import LayerDense, LayerDropout
+from .accuracy import AccuracyCategorical, AccuracyRegression
 from .activation_layers import (
-    ActivationReLU,
-    ActivationSoftmax,
-    ActivationSigmoid,
     ActivationLinear,
+    ActivationReLU,
+    ActivationSigmoid,
+    ActivationSoftmax,
 )
+from .datasets import download_fashion_mnist_dataset, load_dataset
+from .layers import LayerDense, LayerDropout
 from .lossfunctions import (
-    LossCategoricalCrossentropy,
     LossBinaryCrossentropy,
-    LossMeanSquaredError,
+    LossCategoricalCrossentropy,
     LossMeanAbsoluteError,
+    LossMeanSquaredError,
 )
-from .optimizers import OptimizerSGD, OptimizerAdagrad, OptimizerRMSprop, OptimizerAdam
+from .model import Model
+from .optimizers import OptimizerAdagrad, OptimizerAdam, OptimizerRMSprop, OptimizerSGD
+from .utils import PlotTraining
 
 __all__ = [
-    Model,
-    LayerDense,
-    LayerDropout,
-    ActivationReLU,
-    ActivationSoftmax,
-    ActivationSigmoid,
-    ActivationLinear,
-    LossCategoricalCrossentropy,
-    LossBinaryCrossentropy,
-    LossMeanSquaredError,
-    LossMeanAbsoluteError,
-    OptimizerSGD,
-    OptimizerAdagrad,
-    OptimizerRMSprop,
-    OptimizerAdam,
+    "Model",
+    "LayerDense",
+    "LayerDropout",
+    "ActivationReLU",
+    "ActivationSoftmax",
+    "ActivationSigmoid",
+    "ActivationLinear",
+    "LossCategoricalCrossentropy",
+    "LossBinaryCrossentropy",
+    "LossMeanSquaredError",
+    "LossMeanAbsoluteError",
+    "OptimizerSGD",
+    "OptimizerAdagrad",
+    "OptimizerRMSprop",
+    "OptimizerAdam",
+    "AccuracyCategorical",
+    "AccuracyRegression",
+    "load_dataset",
+    "download_fashion_mnist_dataset",
+    "PlotTraining",
 ]

@@ -1,0 +1,68 @@
+[01;34m.[0m
+|-- README.md
+|-- pyproject.toml
+|-- .gitignore
+|-- .dockerignore
+|-- [01;34mbranding[0m
+|   `-- [01;34mlogo[0m
+|       |-- [01;34mprimary[0m
+|       |   |-- [01;35mnetweaverlogo-light.png[0m
+|       |   |-- [01;35mnetweaverlogo-dark.png[0m
+|       |   `-- [01;35mnetweaverlogo-transparent.png[0m
+|       `-- [01;34mlogomark[0m
+|           |-- [01;35mnetweaverlogoicon-dark.png[0m
+|           |-- [01;35mnetweaverlogoicon-transparent.png[0m
+|           `-- [01;35mnetweaverlogoicon-light.png[0m
+|-- CONTRIBUTING.md
+|-- [01;34mnotebooks[0m
+|   `-- [01;34mdemonstration[0m
+|       |-- demo_metricmonitor.ipynb
+|       `-- demo_libusage.ipynb
+|-- uv.lock
+|-- [01;34msrc[0m
+|   `-- [01;34mnetweaver[0m
+|       |-- __init__.py
+|       |-- accuracy.py
+|       |-- datasets.py
+|       |-- optimizers.py
+|       |-- activation_layers.py
+|       |-- model.py
+|       |-- _internal_utils.py
+|       |-- softmax_cce_loss.py
+|       |-- utils.py
+|       |-- layers.py
+|       `-- lossfunctions.py
+|-- [01;34m.devcontainer[0m
+|   |-- devcontainer.json
+|   |-- update_zshrc.sh
+|   `-- Dockerfile
+|-- LICENSE.txt
+|-- [01;34m.vscode[0m
+|   |-- extensions.json
+|   `-- settings.json
+|-- [01;34mdrawio[0m
+|   `-- [01;35msample.drawio.svg[0m
+|-- [01;34mdoc[0m
+|   |-- [01;34mimages[0m
+|   |   |-- [01;35mdownload.png[0m
+|   |   |-- [01;35mtrainingstart.png[0m
+|   |   |-- [01;35mtraining_complete.png[0m
+|   |   |-- [01;35mlog_dir.png[0m
+|   |   |-- [01;35mgraphstart.png[0m
+|   |   |-- [01;35mgraph_slide.png[0m
+|   |   `-- [01;35mstatci_plot.png[0m
+|   `-- project_tree.txt
+|-- [01;34mtests[0m
+|   |-- [01;34me2e[0m
+|   |-- [01;34mintegration[0m
+|   |-- [01;34munit[0m
+|   |   |-- test_optimizers.py
+|   |   |-- test_layers.py
+|   |   |-- test_activation_layers.py
+|   |   `-- test_loss_functions.py
+|   `-- [01;34mfunctional[0m
+|       |-- test_datasets.py
+|       `-- test_model_training.py
+`-- ruff.toml
+
+19 directories, 47 files
