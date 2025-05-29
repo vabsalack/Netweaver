@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="branding/logo/primary/netweaverlogo-transparent.png" alt="netweaver logo" width=300 />
+    <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/branding/logo/primary/netweaverlogo-transparent.png" alt="netweaver logo" width=300 />
 </p>
 
 Introduction
@@ -12,6 +12,8 @@ Whether you're a student, a curious developer, or a researcher testing new ideas
 
 The ultimate goal is to foster a collaborative space where learners and tinkerers can exchange ideas and build together. Contributions of all kinds—bug fixes, enhancements, or new features—are not only welcome but encouraged.
 
+Source code: https://github.com/vabsalack/Netweaver
+
 ## ✨ Features
 
 - No deep learning frameworks—just [Numpy](https://numpy.org/)
@@ -22,14 +24,15 @@ The ultimate goal is to foster a collaborative space where learners and tinkerer
 ## 📚 Table of Contents
 
 
-| S.No. | Contents                                |
-| ----- | --------------------------------------- |
-|   1.    | [Installation](#🚀-installation)      |
+| S.No. | Contents                                   |
+| ----- | ---------------------------------------    |
+|   1.    | [Installation](#🚀-installation)         |
 |   2.    | [Usage](#🛠️-usage)                       |
 |   3.    | [Project Structure](#🧱-project-structure) |
 |   4.    | [Contributing](#🤝-contributing)         |
 |   5.    | [Authors](#🫂-author)                    |
-|   6.    | [License](#📄-license)                   |
+|   6.    | [Community](#community-channels)         |
+|   7.    | [License](#license)                      |
 
 ## 🚀 Installation
 
@@ -62,16 +65,16 @@ Here are some key features that make working with Netweaver both intuitive and p
 1. **Effortless Dataset Handling:**  
     Netweaver offers built-in utilities to download and extract the Fashion MNIST dataset, allowing you to jump straight into building and training neural networks without manual data preparation. 
     <p align="center">
-    <img src="store_room/images/download.png" alt="download" />
+    <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/store_room/images/download.png" alt="download" />
     </p>
 
 2. **Integrated Progress Monitoring:**  
     Training loops come with an embedded progress bar that displays real-time updates, including estimated time remaining for both epochs and batches. This provides clear visibility into training progress and helps manage expectations during long runs.
     <p align="center">
-    <img src="store_room/images/trainingstart.png" alt="progressbar1" />
+    <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/store_room/images/trainingstart.png" alt="progressbar1" />
     </p>
     <p align="center">
-    <img src="store_room/images/training_complete.png" alt="progressbar2" />
+    <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/store_room/images/training_complete.png" alt="progressbar2" />
     </p>
 
 3. **Real-Time Metric Visualization:**  
@@ -80,13 +83,13 @@ Here are some key features that make working with Netweaver both intuitive and p
     <table>
         <tr>
             <td align="center">
-                <img src="store_room/images/graphstart.png" alt="Live metric animation" />
+                <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/store_room/images/graphstart.png" alt="Live metric animation" />
             </td>
             <td align="center">
-                <img src="store_room/images/graph_slide.png" alt="Scrolling metric graph" />
+                <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/store_room/images/graph_slide.png" alt="Scrolling metric graph" />
             </td>
             <td align="center">
-                <img src="store_room/images/statci_plot.png" alt="Static metric plot" />
+                <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/store_room/images/statci_plot.png" alt="Static metric plot" />
             </td>
         </tr>
     </table>
@@ -94,7 +97,7 @@ Here are some key features that make working with Netweaver both intuitive and p
 4. **Organized Logging and Model Management:**  
     Each training session generates its own dedicated log folder. All logs and model files are automatically suffixed with a timestamp (`{now:%Y%m%d-%H%M%S}`), ensuring that results from different runs are kept separate and easy to compare. This organization simplifies experiment tracking and reproducibility.
     <p align="center">
-    <img src="store_room/images/log_dir.png" alt="directorylog" />
+    <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/store_room/images/log_dir.png" alt="directorylog" />
     </p>
 
 These features collectively make Netweaver a practical and educational tool for anyone interested in understanding and experimenting with neural networks.
@@ -235,13 +238,23 @@ If you're curious about the inspiration behind Netweaver, check out the awesome 
     </tr>
 </table>
 
+## Community channels
+
+<table>
+    <tr>
+        <td>
+            <a href="https://discord.gg/5GS8EGdr" target="_blank">Discord</a>
+        </td> 
+    </tr>
+</table>
+
 
 ## 📄 License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE.txt) file for details.
 
 <p align="center">
-    <img src="branding/logo/logomark/netweaverlogoicon-transparent.png" alt="netweaver logo" width=70 />
+    <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/branding/logo/logomark/netweaverlogoicon-transparent.png" alt="netweaver logo" width=70 />
 </p>
 
 
