@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from netweaver.layers import LayerDense, LayerDropout, LayerInput
+from netweaver.layers import LayerDense, LayerDropout, _LayerInput
 
 
 @pytest.fixture
@@ -373,12 +373,12 @@ def test_set_parameters(test_data_layer):
 
 def test_layer_input_forward(test_data_layer):
     """
-    Test to ensure that the forward method of LayerInput
+    Test to ensure that the forward method of _LayerInput
     correctly passes the input data as output.
     """
 
-    # Create an instance of LayerInput
-    input_layer = LayerInput()
+    # Create an instance of _LayerInput
+    input_layer = _LayerInput()
 
     # Perform forward pass with the input data
     input_layer.forward(test_data_layer.get("inputs"), training=True)
@@ -387,7 +387,7 @@ def test_layer_input_forward(test_data_layer):
     np.testing.assert_array_equal(
         input_layer.output,
         test_data_layer.get("inputs"),
-        err_msg="LayerInput forward method output does not match the expected input value",
+        err_msg="_LayerInput forward method output does not match the expected input value",
     )
 
 
