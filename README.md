@@ -238,18 +238,21 @@ If you're curious about the inspiration behind Netweaver, check out the awesome 
     </tr>
 </table>
 
-## Community channels
+## Community Channels
 
 <table>
     <tr>
         <td>
-            <a href="https://discord.gg/5GS8EGdr" target="_blank">Discord</a>
+            <a href="https://discord.gg/5GS8EGdr" target="_blank">Discord, click me</a>
+        </td> 
+        <td>
+            use text channels wisely
         </td> 
     </tr>
 </table>
 
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE.txt) file for details.
 
