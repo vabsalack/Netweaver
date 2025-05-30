@@ -14,27 +14,28 @@ The ultimate goal is to foster a collaborative space where learners and tinkerer
 
 Source code: https://github.com/vabsalack/Netweaver
 
-## ✨ Features
+## Features
 
 - No deep learning frameworks—just [Numpy](https://numpy.org/)
 - Modular architecture (Layers, Activations, Losses, etc..)
 - Easy to extend and customize
 - Designed for learning and experimentation
 
-## 📚 Table of Contents
+## Table of Contents
 
 
-| S.No. | Contents                                   |
-| ----- | ---------------------------------------    |
-|   1.    | [Installation](#🚀-installation)         |
-|   2.    | [Usage](#🛠️-usage)                       |
-|   3.    | [Project Structure](#🧱-project-structure) |
-|   4.    | [Contributing](#🤝-contributing)         |
-|   5.    | [Authors](#🫂-author)                    |
-|   6.    | [Community](#community-channels)         |
-|   7.    | [License](#license)                      |
+| S.No. | Contents                                |
+| ----- | --------------------------------------- |
+|   1.    | [Installation](#installation)         |
+|   2.    | [Features](#features)                 |
+|   3.    | [Usage](#usage)                       |
+|   4.    | [Project Structure](#project-structure) |
+|   5.    | [Contributing](#contributing)         |
+|   6.    | [Authors](#author)                    |
+|   7.    | [Community](#community-channels)      |
+|   8.    | [License](#license)                   |
 
-## 🚀 Installation
+## Installation
 
 You can install Netweaver using:
 
@@ -53,7 +54,7 @@ cd netweaver
 pip install -e .
 ```
 
-## 🛠️ Usage
+## Usage
 Here’s a minimal example of building and training a neural network with Netweaver:
 
 For detailed instructions and examples, refer to the [`demo_libusage.ipynb`](notebooks/demonstration/demo_libusage.ipynb) and [`demo_metricmonitor.ipynb`](notebooks/demonstration/demo_metricmonitor.ipynb) files.
@@ -102,7 +103,7 @@ Here are some key features that make working with Netweaver both intuitive and p
 
 These features collectively make Netweaver a practical and educational tool for anyone interested in understanding and experimenting with neural networks.
 
-## 🧱 Project Structure
+## Project Structure
 
 ```
 .
@@ -153,7 +154,7 @@ These features collectively make Netweaver a practical and educational tool for 
 |       `-- test_model_training.py
 `-- ruff.toml
 ```
-## 🤝 Contributing
+## Contributing
 
 We welcome all contributions! Whether you have ideas for improvements, bug fixes, or new features, your input is valued.
 
@@ -206,7 +207,7 @@ Feel free to open issues for bugs, feature requests, or questions. Let's grow a 
 
 Thank you for helping make Netweaver better!
 
-## 🫂 Author
+## Author
 
 Netweaver was created as a side project to explore the deeper math behind neural networks and as a way to overcome boredom.
 If you're curious about the inspiration behind Netweaver, check out the awesome [Neural Networks from Scratch](https://nnfs.io/) book. That's where the spark for this project came from
@@ -238,18 +239,21 @@ If you're curious about the inspiration behind Netweaver, check out the awesome 
     </tr>
 </table>
 
-## Community channels
+## Community Channels
 
 <table>
     <tr>
         <td>
-            <a href="https://discord.gg/5GS8EGdr" target="_blank">Discord</a>
+            <a href="https://discord.gg/5GS8EGdr" target="_blank">Discord, click me</a>
+        </td> 
+        <td>
+            use text channels wisely
         </td> 
     </tr>
 </table>
 
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE.txt) file for details.
 
