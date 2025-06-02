@@ -3,8 +3,7 @@ import pytest
 
 @pytest.fixture
 def test_data_filepath():
-    test_dict = {"dataset_abs_path": "/home/keerthivasan_user/Documents/git/netweaver/datasets"}
-    return test_dict
+    return {"dataset_abs_path": "/home/keerthivasan_user/Documents/git/netweaver/datasets"}
 
 
 def test__load_mnist_dataset():

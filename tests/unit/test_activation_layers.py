@@ -1,16 +1,17 @@
 import numpy as np
 import pytest
+
 from netweaver.activation_layers import (
-    ActivationReLU,
-    ActivationSoftmax,
     ActivationLinear,
+    ActivationReLU,
     ActivationSigmoid,
+    ActivationSoftmax,
 )
 
 
 @pytest.fixture
 def test_data_activation():
-    test_dict = {
+    return {
         "inputs": np.array(
             [
                 [-0.01380016, 0.01021142, 0.02415861, 0.0166071],
@@ -23,7 +24,7 @@ def test_data_activation():
                 [0.0, 0.01531618, 0.07706312, 0.07134915],
             ]
         ),
-        "dvalues": np.array( # assume inputs as dvalues since no of relu outputs same as inputs
+        "dvalues": np.array(  # assume inputs as dvalues since no of relu outputs same as inputs
             [
                 [-0.01380016, 0.01021142, 0.02415861, 0.0166071],
                 [-0.02000757, 0.01531618, 0.07706312, 0.07134915],
@@ -62,7 +63,6 @@ def test_data_activation():
         ),
         "expected_sigmoid_predictions_value": np.array([[0, 1, 1, 1], [0, 1, 1, 1]]),
     }
-    return test_dict
 
 
 ### Test cases for Relu Activation

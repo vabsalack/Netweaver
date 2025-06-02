@@ -11,7 +11,7 @@ from netweaver.lossfunctions import (
 
 @pytest.fixture
 def test_data_cc_loss():
-    test_dict = {
+    return {
         "softmax_outputs": np.array(
             [
                 [0.24426796, 0.2502042, 0.25371829, 0.25180955],
@@ -34,7 +34,6 @@ def test_data_cc_loss():
             ]
         ),
     }
-    return test_dict
 
 
 def test_categorical_crossentropy_forward(test_data_cc_loss):
@@ -123,7 +122,7 @@ def test_categorical_crossentropy_backward(test_data_cc_loss):
 
 @pytest.fixture
 def test_data_bc_loss():
-    test_dict = {
+    return {
         "sigmoid_outputs": np.array(
             [
                 [0.49655001, 0.50255283, 0.50603936, 0.50415168],
@@ -144,7 +143,6 @@ def test_data_bc_loss():
             ]
         ),
     }
-    return test_dict
 
 
 def test_binary_crossentropy_forward(test_data_bc_loss):
@@ -160,9 +158,7 @@ def test_binary_crossentropy_forward(test_data_bc_loss):
     # Perform the forward pass
     # This computes the binary cross-entropy loss for each sample
     binary_loss_array = loss_object.forward(
-        test_data_bc_loss.get(
-            "sigmoid_outputs"
-        ),  # Predicted probabilities (sigmoid outputs)
+        test_data_bc_loss.get("sigmoid_outputs"),  # Predicted probabilities (sigmoid outputs)
         test_data_bc_loss.get("bc_true_label"),  # True binary labels
     )
 
@@ -187,9 +183,7 @@ def test_binary_crossentropy_backward(test_data_bc_loss):
     # Perform the backward pass
     # This computes the gradients of the binary cross-entropy loss with respect to the inputs (dinputs)
     loss_object.backward(
-        test_data_bc_loss.get(
-            "sigmoid_outputs"
-        ),  # Predicted probabilities (sigmoid outputs)
+        test_data_bc_loss.get("sigmoid_outputs"),  # Predicted probabilities (sigmoid outputs)
         test_data_bc_loss.get("bc_true_label"),  # True binary labels
     )
 
@@ -204,7 +198,7 @@ def test_binary_crossentropy_backward(test_data_bc_loss):
 
 @pytest.fixture
 def test_data_mac_loss():
-    test_dict = {
+    return {
         "y_pred": np.array(
             [
                 [2.5, 0.0, 2.1],
@@ -225,7 +219,6 @@ def test_data_mac_loss():
             ]
         ),
     }
-    return test_dict
 
 
 def test_meanabsolute_crossentropy_forward(test_data_mac_loss):
@@ -281,7 +274,7 @@ def test_meanabsolute_crossentropy_backward(test_data_mac_loss):
 
 @pytest.fixture
 def test_data_mse_loss():
-    test_dict = {
+    return {
         "y_pred": np.array(
             [
                 [2.5, 0.0, 2.1],
@@ -302,7 +295,6 @@ def test_data_mse_loss():
             ]
         ),
     }
-    return test_dict
 
 
 def test_meansquared_crossentropy_forward(test_data_mse_loss):

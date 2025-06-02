@@ -1,21 +1,84 @@
 [project]
 name = "netweaver"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-authors = [{ name = "kittu", email = "keerthi.pydev@gmail.com" }]
-requires-python = ">=3.13"
+description = "Neural Network from Scratch"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+keywords = ["neural network", "numpy", "deep learning", "python", "ai", "artificial intelligence", "machine learning"]
 dependencies = [
     "numpy>=2.2.4",
     "tqdm>=4.67.1",
     "pympler>=1.1",
     "ipympl>=0.9.7",
     "pandas>=2.2.3",
+    "matplotlib>=3.10.1",
+    "jupyter>=1.1.1",
 ]
+authors = [
+    { name = "keerthivasan", email = "keerthi.pydev@gmail.com" }
+]
+maintainers = [
+  {name = "keerthivasan", email = "keerthi.pydev@gmail.com"}
+]
+classifiers = [
+  # How mature is this project? Common values are 3 - Alpha 4 - Beta 5 - Production/Stable
+  "Development Status :: 5 - Production/Stable",
+  "Operating System :: OS Independent",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+
+  "Topic :: Education",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+]
+
+[project.urls]
+Homepage = "https://github.com/vabsalack/Netweaver"
+Repository = "https://github.com/vabsalack/Netweaver"
+Issues = "https://github.com/vabsalack/Netweaver"
+
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = ["jupyter>=1.1.1", "matplotlib>=3.10.1", "pytest>=8.3.5", "ruff>=0.11.2"]
+dev = [
+    "pyright>=1.1.401",
+    "pytest>=8.3.5",
+ "ruff>=0.11.2",
+]
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true # only be used if it is explicitly referenced.
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple/"
+publish-url = "https://upload.pypi.org/legacy/"
+explicit = false
+
+# [tool.uv]
+# trusted-publishing = "always"
+# trusted-publishing = "automatic"

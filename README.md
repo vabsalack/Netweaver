@@ -14,6 +14,9 @@ The ultimate goal is to foster a collaborative space where learners and tinkerer
 
 Source code: https://github.com/vabsalack/Netweaver
 
+To get started, simply [install](#installation) the library. For a hands-on introduction, I recommend downloading and running these two notebooks: [`demo_libusage.ipynb`](notebooks/demonstration/demo_libusage.ipynb) and [`demo_metricmonitor.ipynb`](notebooks/demonstration/demo_metricmonitor.ipynb). They'll walk you through the basics and show you how to make the most of Netweaver.
+
+
 ## Features
 
 - No deep learning frameworks—just [Numpy](https://numpy.org/)
@@ -112,7 +115,6 @@ These features collectively make Netweaver a practical and educational tool for 
 |-- .gitignore
 |-- .dockerignore
 |-- branding
-|-- CONTRIBUTING.md
 |-- notebooks
 |   `-- demonstration
 |       |-- demo_metricmonitor.ipynb
@@ -141,6 +143,7 @@ These features collectively make Netweaver a practical and educational tool for 
 |   `-- settings.json
 |-- drawio
 |-- store_room
+|   |-- images
 |-- tests
 |   |-- e2e
 |   |-- integration

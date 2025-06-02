@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from netweaver.layers import LayerDense
-from netweaver.optimizers import OptimizerSGD, OptimizerAdam
+from netweaver.optimizers import OptimizerAdam, OptimizerSGD
 
 ### Test OptimizerSGD
 
@@ -16,10 +16,10 @@ def test_data_optimizers():
     biases, and gradients. It also provides expected values for weights,
     biases, and learning rates after updates with and without momentum or decay.
     """
-    np.random.seed(42)  # Set seed for reproducibility
+    rng = np.random.default_rng(42)
 
     # Initialize a LayerDense object with 2 inputs and 2 neurons
-    layer = LayerDense(n_inputs=2, n_neurons=2)
+    layer = LayerDense(n_inputs=2, n_neurons=2, rng=rng)
 
     # Set initial weights and biases
     layer.weights = np.array([[0.5, -0.5], [0.3, -0.3]])
@@ -30,7 +30,7 @@ def test_data_optimizers():
     layer.dbiases = np.array([[0.05, -0.05]])
 
     # Create a dictionary with test data and expected results
-    test_dict = {
+    return {
         "layer_object": layer,
         "sgd_learning_rate": 0.1,  # Learning rate for SGD
         "expected_weights_without_momentum": np.array(
@@ -53,11 +53,8 @@ def test_data_optimizers():
             [[0.0855, -0.0855]]  # Expected biases after 2 updates with momentum
         ),
         "sgd_decay": 0.01,  # Decay rate for learning rate
-        "expected_learning_rate": 0.1
-        / (1 + 0.01 * 1),  # Expected learning rate after 2 updates
+        "expected_learning_rate": 0.1 / (1 + 0.01 * 1),  # Expected learning rate after 2 updates
     }
-
-    return test_dict
 
 
 def test_optimizer_sgd_basic_update(test_data_optimizers):
@@ -164,16 +161,14 @@ def test_optimizer_sgd_with_decay(test_data_optimizers):
     optimizer.post_update_params()
 
     # Assert that the current learning rate matches the expected decayed learning rate
-    assert optimizer.current_learning_rate == test_data_optimizers.get(
-        "expected_learning_rate"
-    ), (
+    assert optimizer.current_learning_rate == test_data_optimizers.get("expected_learning_rate"), (
         f"Learning rate decay did not work as expected. "
         f"Expected {test_data_optimizers.get('expected_learning_rate')}, got {optimizer.current_learning_rate}."
     )
 
 
 @pytest.fixture
-def test_data_optimizerAdam():
+def test_data_optimizeradam():
     """
     Fixture to provide test data for testing the Adam optimizer.
 
@@ -187,10 +182,10 @@ def test_data_optimizerAdam():
         - The random seed is set to ensure reproducibility of the test data.
         - The weights, biases, and gradients are manually set to specific values
           for controlled testing."""
-    np.random.seed(42)  # Set seed for reproducibility
+    rng = np.random.default_rng(42)  # Set seed for reproducibility
 
     # Initialize a LayerDense object with 2 inputs and 2 neurons
-    layer = LayerDense(n_inputs=2, n_neurons=2)
+    layer = LayerDense(n_inputs=2, n_neurons=2, rng=rng)
 
     # Set initial weights and biases
     layer.weights = np.array([[0.5, -0.5], [0.3, -0.3]])
@@ -199,7 +194,7 @@ def test_data_optimizerAdam():
     # Set gradients for weights and biases
     layer.dweights = np.array([[0.2, 0.2], [0.1, -0.1]])
     layer.dbiases = np.array([[0.05, 0.05]])
-    test_dict = {
+    return {
         "layer_object": layer,
         "decay": 0.3,
         "learning_rate": 0.01,
@@ -228,13 +223,12 @@ def test_data_optimizerAdam():
         ),
         "expected_biases_iteration_2": np.array([[0.07605774, -0.12394226]]),
     }
-    return test_dict
 
 
 ## Test OptimizerAdam
 
 
-def test_optimizer_adam_with_decay(test_data_optimizerAdam):
+def test_optimizer_adam_with_decay(test_data_optimizeradam):
     """
     Test that OptimizerAdam correctly updates weights and biases
     with learning rate decay over three iterations.
@@ -242,12 +236,12 @@ def test_optimizer_adam_with_decay(test_data_optimizerAdam):
 
     # Initialize the optimizer with a learning rate, decay, and default Adam parameters
     optimizer = OptimizerAdam(
-        learning_rate=test_data_optimizerAdam.get("learning_rate"),
-        decay=test_data_optimizerAdam.get("decay"),
+        learning_rate=test_data_optimizeradam.get("learning_rate"),
+        decay=test_data_optimizeradam.get("decay"),
     )
 
     # Retrieve the LayerDense object from the test data
-    layer_object = test_data_optimizerAdam.get("layer_object")
+    layer_object = test_data_optimizeradam.get("layer_object")
 
     # Perform the first update: prepare, update, and finalize the parameters
     optimizer.pre_update_params()  # Prepare for the update (e.g., calculate decayed learning rate)
@@ -255,17 +249,15 @@ def test_optimizer_adam_with_decay(test_data_optimizerAdam):
     optimizer.post_update_params()  # Finalize the update (e.g., increment iteration count)
 
     # Assert that the current learning rate matches the expected decayed learning rate after iteration 0
-    assert optimizer.current_learning_rate == pytest.approx(
-        test_data_optimizerAdam.get("learning_rate_iteration_0"), rel=1e-6
-    ), (
+    assert optimizer.current_learning_rate == pytest.approx(test_data_optimizeradam.get("learning_rate_iteration_0"), rel=1e-6), (
         f"Learning rate decay did not work as expected after iteration 0. "
-        f"Expected {test_data_optimizerAdam.get('learning_rate_iteration_0')}, got {optimizer.current_learning_rate}."
+        f"Expected {test_data_optimizeradam.get('learning_rate_iteration_0')}, got {optimizer.current_learning_rate}."
     )
 
     # Assert that the updated weights match the expected values after iteration 0
     np.testing.assert_array_almost_equal(
         layer_object.weights,
-        test_data_optimizerAdam.get("expected_weights_iteration_0"),
+        test_data_optimizeradam.get("expected_weights_iteration_0"),
         decimal=6,
         err_msg="Weights were not updated correctly by OptimizerAdam after iteration 0.",
     )
@@ -273,7 +265,7 @@ def test_optimizer_adam_with_decay(test_data_optimizerAdam):
     # Assert that the updated biases match the expected values after iteration 0
     np.testing.assert_array_almost_equal(
         layer_object.biases,
-        test_data_optimizerAdam.get("expected_biases_iteration_0"),
+        test_data_optimizeradam.get("expected_biases_iteration_0"),
         decimal=6,
         err_msg="Biases were not updated correctly by OptimizerAdam after iteration 0.",
     )
@@ -284,17 +276,15 @@ def test_optimizer_adam_with_decay(test_data_optimizerAdam):
     optimizer.post_update_params()  # Finalize the update
 
     # Assert that the current learning rate matches the expected decayed learning rate after iteration 1
-    assert optimizer.current_learning_rate == pytest.approx(
-        test_data_optimizerAdam.get("learning_rate_iteration_1"), rel=1e-6
-    ), (
+    assert optimizer.current_learning_rate == pytest.approx(test_data_optimizeradam.get("learning_rate_iteration_1"), rel=1e-6), (
         f"Learning rate decay did not work as expected after iteration 1. "
-        f"Expected {test_data_optimizerAdam.get('learning_rate_iteration_1')}, got {optimizer.current_learning_rate}."
+        f"Expected {test_data_optimizeradam.get('learning_rate_iteration_1')}, got {optimizer.current_learning_rate}."
     )
 
     # Assert that the updated weights match the expected values after iteration 1
     np.testing.assert_array_almost_equal(
         layer_object.weights,
-        test_data_optimizerAdam.get("expected_weights_iteration_1"),
+        test_data_optimizeradam.get("expected_weights_iteration_1"),
         decimal=6,
         err_msg="Weights were not updated correctly by OptimizerAdam after iteration 1.",
     )
@@ -302,7 +292,7 @@ def test_optimizer_adam_with_decay(test_data_optimizerAdam):
     # Assert that the updated biases match the expected values after iteration 1
     np.testing.assert_array_almost_equal(
         layer_object.biases,
-        test_data_optimizerAdam.get("expected_biases_iteration_1"),
+        test_data_optimizeradam.get("expected_biases_iteration_1"),
         decimal=6,
         err_msg="Biases were not updated correctly by OptimizerAdam after iteration 1.",
     )
@@ -313,17 +303,15 @@ def test_optimizer_adam_with_decay(test_data_optimizerAdam):
     optimizer.post_update_params()  # Finalize the update
 
     # Assert that the current learning rate matches the expected decayed learning rate after iteration 2
-    assert optimizer.current_learning_rate == pytest.approx(
-        test_data_optimizerAdam.get("learning_rate_iteration_2"), rel=1e-6
-    ), (
+    assert optimizer.current_learning_rate == pytest.approx(test_data_optimizeradam.get("learning_rate_iteration_2"), rel=1e-6), (
         f"Learning rate decay did not work as expected after iteration 2. "
-        f"Expected {test_data_optimizerAdam.get('learning_rate_iteration_2')}, got {optimizer.current_learning_rate}."
+        f"Expected {test_data_optimizeradam.get('learning_rate_iteration_2')}, got {optimizer.current_learning_rate}."
     )
 
     # Assert that the updated weights match the expected values after iteration 2
     np.testing.assert_array_almost_equal(
         layer_object.weights,
-        test_data_optimizerAdam.get("expected_weights_iteration_2"),
+        test_data_optimizeradam.get("expected_weights_iteration_2"),
         decimal=6,
         err_msg="Weights were not updated correctly by OptimizerAdam after iteration 2.",
     )
@@ -331,7 +319,7 @@ def test_optimizer_adam_with_decay(test_data_optimizerAdam):
     # Assert that the updated biases match the expected values after iteration 2
     np.testing.assert_array_almost_equal(
         layer_object.biases,
-        test_data_optimizerAdam.get("expected_biases_iteration_2"),
+        test_data_optimizeradam.get("expected_biases_iteration_2"),
         decimal=6,
         err_msg="Biases were not updated correctly by OptimizerAdam after iteration 2.",
     )

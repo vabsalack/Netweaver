@@ -6,7 +6,7 @@ from netweaver.layers import LayerDense, LayerDropout, _LayerInput
 
 @pytest.fixture
 def test_data_layer():  # uses np.random.seed(42)
-    test_dict = {
+    return {
         "n_inputs": 3,
         "n_neurons": 4,
         "expected_weights_value": np.array(
@@ -79,7 +79,6 @@ def test_data_layer():  # uses np.random.seed(42)
         ),
         "expected_dropout_dinputs_value": np.array([[1.42857143, 0.0, 0.0, 5.71428571], [7.14285714, 8.57142857, 10.0, 0.0]]),
     }
-    return test_dict
 
 
 ### Test cases for LayderDense layer
@@ -92,12 +91,13 @@ def test_layer_dense_weights_and_biases_shape(test_data_layer):
     """
 
     # Reset the random seed before creating the LayerDense instance
-    np.random.seed(42)
+    rng = np.random.default_rng(42)
 
     # Create a LayerDense instance
     layer = LayerDense(
         n_inputs=test_data_layer.get("n_inputs"),
         n_neurons=test_data_layer.get("n_neurons"),
+        rng=rng,
     )
 
     # Check the value of weights
@@ -133,10 +133,12 @@ def test_layer_dense_forward(test_data_layer):
     """
 
     # Reset the random seed before creating the LayerDense instance
-    np.random.seed(42)
+    rng = np.random.default_rng(42)
+
     layer = LayerDense(
         n_inputs=test_data_layer.get("n_inputs"),
         n_neurons=test_data_layer.get("n_neurons"),
+        rng=rng,
     )
 
     # Perform forward pass
@@ -163,11 +165,9 @@ def test_layer_dense_backward(test_data_layer):
     """
 
     # Reset the random seed before creating the LayerDense instance
-    np.random.seed(42)
-    layer = LayerDense(
-        n_inputs=test_data_layer.get("n_inputs"),
-        n_neurons=test_data_layer.get("n_neurons"),
-    )
+    rng = np.random.default_rng(42)
+
+    layer = LayerDense(n_inputs=test_data_layer.get("n_inputs"), n_neurons=test_data_layer.get("n_neurons"), rng=rng)
 
     # Perform forward pass
     layer.forward(inputs=test_data_layer.get("inputs"), training=True)
@@ -220,7 +220,7 @@ def test_layer_dense_l1_regularization(test_data_layer):
     """
 
     # Set the random seed for reproducibility
-    np.random.seed(42)
+    rng = np.random.default_rng(42)
 
     # Create a LayerDense instance with L1 regularization parameters
     layer = LayerDense(
@@ -228,6 +228,7 @@ def test_layer_dense_l1_regularization(test_data_layer):
         n_neurons=test_data_layer.get("n_neurons"),
         weight_regularizer_l1=test_data_layer.get("l1_weights_strength"),  # L1 regularization for weights
         bias_regularizer_l1=test_data_layer.get("l1_biases_strength"),  # L1 regularization for biases
+        rng=rng,
     )
 
     # Perform forward pass (required before backward pass)
@@ -262,7 +263,7 @@ def test_layer_dense_l2_regularization(test_data_layer):
     """
 
     # Set the random seed for reproducibility
-    np.random.seed(42)
+    rng = np.random.default_rng(42)
 
     # Create a LayerDense instance with L2 regularization parameters
     layer = LayerDense(
@@ -270,6 +271,7 @@ def test_layer_dense_l2_regularization(test_data_layer):
         n_neurons=test_data_layer.get("n_neurons"),
         weight_regularizer_l2=test_data_layer.get("l2_weights_strength"),  # L2 regularization for weights
         bias_regularizer_l2=test_data_layer.get("l2_biases_strength"),  # L2 regularization for biases
+        rng=rng,
     )
 
     # Perform forward pass (required before backward pass)
@@ -304,11 +306,9 @@ def test_get_parameters(test_data_layer):
     """
 
     # Reset the random seed before creating the LayerDense instance
-    np.random.seed(42)
-    layer = LayerDense(
-        n_inputs=test_data_layer.get("n_inputs"),
-        n_neurons=test_data_layer.get("n_neurons"),
-    )
+    rng = np.random.default_rng(42)
+
+    layer = LayerDense(n_inputs=test_data_layer.get("n_inputs"), n_neurons=test_data_layer.get("n_neurons"), rng=rng)
 
     # Get the parameters
     weights, biases = layer.get_parameters()
@@ -338,10 +338,12 @@ def test_set_parameters(test_data_layer):
     """
 
     # Reset the random seed before creating the LayerDense instance
-    np.random.seed(42)
+    rng = np.random.default_rng(42)
+
     layer = LayerDense(
         n_inputs=test_data_layer.get("n_inputs"),
         n_neurons=test_data_layer.get("n_neurons"),
+        rng=rng,
     )
 
     # Set the parameters
@@ -400,10 +402,12 @@ def test_layer_dropout_forward(test_data_layer):
     correctly applies dropout to the input data.
     """
 
-    # Create an instance of LayerDropout with a dropout rate of 0.5
-    dropout_layer = LayerDropout(rate=test_data_layer.get("dropout_rate"))
     # Set the random seed for reproducibility
-    np.random.seed(42)
+    rng = np.random.default_rng(42)
+
+    # Create an instance of LayerDropout with a dropout rate of 0.5
+    dropout_layer = LayerDropout(rate=test_data_layer.get("dropout_rate"), rng=rng)
+
     # Perform forward pass with the input data
     dropout_layer.forward(test_data_layer.get("expected_output_value"), training=True)
 
@@ -422,10 +426,12 @@ def test_layer_dropout_backward(test_data_layer):
     correctly applies dropout to the input data.
     """
 
-    # Create an instance of LayerDropout with a dropout rate of 0.5
-    dropout_layer = LayerDropout(rate=test_data_layer.get("dropout_rate"))
     # Set the random seed for reproducibility
-    np.random.seed(42)
+    rng = np.random.default_rng(42)
+
+    # Create an instance of LayerDropout with a dropout rate of 0.5
+    dropout_layer = LayerDropout(rate=test_data_layer.get("dropout_rate"), rng=rng)
+
     # Perform forward pass with the input data
     dropout_layer.forward(test_data_layer.get("expected_output_value"), training=True)
     # Perform backward pass with the dvalues
