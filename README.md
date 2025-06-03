@@ -2,8 +2,11 @@
     <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/branding/logo/primary/netweaverlogo-transparent.png" alt="netweaver logo" width=300 />
 </p>
 
-Introduction
----
+![GitHub License](https://img.shields.io/github/license/vabsalack/netweaver)
+
+
+
+## Introduction
 
 **Netweaver** is a lightweight, from-scratch implementation of neural networks, built primarily with [Numpy](https://numpy.org/) for efficient and fast matrix operations. It avoids heavy dependencies and complex abstractions, making it ideal for learning, experimentation, and educational use.
 
@@ -12,9 +15,12 @@ Whether you're a student, a curious developer, or a researcher testing new ideas
 
 The ultimate goal is to foster a collaborative space where learners and tinkerers can exchange ideas and build together. Contributions of all kinds—bug fixes, enhancements, or new features—are not only welcome but encouraged.
 
-Source code: https://github.com/vabsalack/Netweaver
+Source code: https://github.com/vabsalack/Netweaver  
+discussions: https://github.com/vabsalack/Netweaver/discussions  
+issues: https://github.com/vabsalack/Netweaver/issues  
+community: https://discord.gg/5GS8EGdr  
 
-To get started, simply [install](#installation) the library. For a hands-on introduction, I recommend downloading and running these two notebooks: [`demo_libusage.ipynb`](notebooks/demonstration/demo_libusage.ipynb) and [`demo_metricmonitor.ipynb`](notebooks/demonstration/demo_metricmonitor.ipynb). They'll walk you through the basics and show you how to make the most of Netweaver.
+To get started, simply [install](#installation) the library. For a hands-on introduction, I recommend downloading and running these two notebooks: [`demo_libusage.ipynb`](https://github.com/vabsalack/Netweaver/blob/main/notebooks/demonstration/demo_libusage.ipynb) and [`demo_metricmonitor.ipynb`](https://github.com/vabsalack/Netweaver/blob/main/notebooks/demonstration/demo_metricmonitor.ipynb). They'll walk you through the basics and show you how to make the most of Netweaver.
 
 
 ## Features
@@ -29,14 +35,16 @@ To get started, simply [install](#installation) the library. For a hands-on intr
 
 | S.No. | Contents                                |
 | ----- | --------------------------------------- |
-|   1.    | [Installation](#installation)         |
+|   1.    | [Introduction](#introduction)         |
 |   2.    | [Features](#features)                 |
-|   3.    | [Usage](#usage)                       |
-|   4.    | [Project Structure](#project-structure) |
-|   5.    | [Contributing](#contributing)         |
-|   6.    | [Authors](#author)                    |
-|   7.    | [Community](#community-channels)      |
-|   8.    | [License](#license)                   |
+|   3.    | [Table of Contents](#table-of-contents)|
+|   4.    | [Installation](#installation)         |
+|   5.    | [Usage](#usage)                       |
+|   6.    | [Project Structure](#project-structure)|
+|   7.    | [Contributing](#contributing)         |
+|   8.    | [Authors](#author)                    |
+|   9.    | [Community](#community-channels)      |
+|   10.   | [License](#license)                   |
 
 ## Installation
 
@@ -52,15 +60,15 @@ uv add netweaver
 ```
 ### Option 3: clone it locally for development and exploration.
 ```bash
-git clone https://github.com/yourusername/netweaver.git
-cd netweaver
+git clone https://github.com/vabsalack/Netweaver.git
+cd Netweaver
 pip install -e .
 ```
 
 ## Usage
 Here’s a minimal example of building and training a neural network with Netweaver:
 
-For detailed instructions and examples, refer to the [`demo_libusage.ipynb`](notebooks/demonstration/demo_libusage.ipynb) and [`demo_metricmonitor.ipynb`](notebooks/demonstration/demo_metricmonitor.ipynb) files.
+For detailed instructions and examples, refer to the [`demo_libusage.ipynb`](https://github.com/vabsalack/Netweaver/blob/main/notebooks/demonstration/demo_libusage.ipynb) and [`demo_metricmonitor.ipynb`](https://github.com/vabsalack/Netweaver/blob/main/notebooks/demonstration/demo_metricmonitor.ipynb) files.
 
 ## Usage Overview & Highlights
 
@@ -196,7 +204,7 @@ The dev container uses a **bind mount** volume, meaning your project files and e
 
 #### Troubleshooting
 
-If you encounter any issues while setting up or using the dev container, please open a request or discussion in the community channels. 
+If you encounter any issues while setting up or using the dev container, please open a request or discussion in the [community](https://discord.gg/5GS8EGdr) channels or Github [discussions](https://github.com/vabsalack/Netweaver/discussions). 
 
 
 Feel free to open issues for bugs, feature requests, or questions. Let's grow a collaborative community focused on learning and innovation!

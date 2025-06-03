@@ -1,9 +1,9 @@
 [project]
 name = "netweaver"
-version = "0.1.0"
+version = "1.0.0"
 description = "Neural Network from Scratch"
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
 keywords = ["neural network", "numpy", "deep learning", "python", "ai", "artificial intelligence", "machine learning"]
