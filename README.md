@@ -2,7 +2,21 @@
     <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/branding/logo/primary/netweaverlogo-transparent.png" alt="netweaver logo" width=300 />
 </p>
 
-![GitHub License](https://img.shields.io/github/license/vabsalack/netweaver)
+![PyPI - Version](https://img.shields.io/pypi/v/Netweaver?style=plastic&logo=Pypi&logoColor=green&logoSize=auto&color=blue)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/netweaver?style=plastic)
+![GitHub Release](https://img.shields.io/github/v/release/vabsalack/Netweaver?display_name=release&style=plastic&color=orange)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/vabsalack/Netweaver/release-live-pypi.yaml?style=plastic&label=CI%2FCD)
+![GitHub License](https://img.shields.io/github/license/vabsalack/Netweaver?style=plastic&color=%23d7d7d7)  
+![Static PL python](https://img.shields.io/badge/python-grey?style=plastic&logo=python&logoColor=%23f8dd00&logoSize=auto&labelColor=blue&color=%23676767)
+![Static UV](https://img.shields.io/badge/UV-grey?style=plastic&logo=uv&logoColor=%23DE5FE9&logoSize=auto&labelColor=%2331163d&color=%23676767%20)
+![Static Ruff](https://img.shields.io/badge/Ruff-grey?style=plastic&label=code%20style&logo=Ruff&logoColor=%23D7FF64&logoSize=auto&labelColor=%2331163d&color=%23676767)
+![Static Badge](https://img.shields.io/badge/gh%20actions-default?style=plastic&logo=githubactions&logoColor=%232088FF&logoSize=auto&labelColor=white&color=%23676767)
+![Static contribution](https://img.shields.io/badge/welcome-default?style=plastic&label=contributions)
+![Open in Dev Containers](https://img.shields.io/static/v1?label=dev%20containers&message=yes&color=blue)
+![Static SemVer](https://img.shields.io/badge/2.0.0-grey?style=plastic&logo=SemVer&logoColor=%233F4551&logoSize=auto&label=SemVer&labelColor=white&color=%23676767)
+[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?logo=discord&logoColor=white)](https://discord.gg/5GS8EGdr)
+
+
 
 
 
