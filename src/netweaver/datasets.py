@@ -3,8 +3,8 @@ import urllib
 import urllib.request
 from zipfile import ZipFile
 
-import matplotlib.image as mpimg
 import numpy as np
+from PIL import Image
 from pympler import asizeof
 
 from ._internal_utils import _create_directory, get_cwd, join_path
@@ -26,17 +26,18 @@ def _load_data(path, dataset) -> tuple[np.ndarray, np.ndarray]:
     Returns
     -------
     tuple of numpy.ndarray
-        A tuple containing the image data as a float32 numpy array and the labels as a uint8 numpy array.
+        A tuple containing the image data as a float32 numpy array, the labels as a uint8 numpy array and total distinct lables.
     """
     labels = os.listdir(os.path.join(path, dataset))
     instances = []
     gtruth = []
     for label in labels:
         for file in os.listdir(os.path.join(path, dataset, label)):
-            image = mpimg.imread(os.path.join(path, dataset, label, file))
+            image = np.array(Image.open(os.path.join(path, dataset, label, file)))
             instances.append(image)
             gtruth.append(label)
-    return np.array(instances, dtype=np.float32), np.array(gtruth, dtype=np.uint8)
+    return np.array(instances, dtype=np.float32), np.array(gtruth, dtype=np.uint8), [int(e) for e in labels]
+    # numpy ensures casting string representation of number to target value type, here dtype=uint8, if possible
 
 
 def _object_size(python_object):
@@ -60,7 +61,9 @@ def _object_size(python_object):
     return f"{object_bytes / 1073741824:.5f}"
 
 
-def _summary_dataset(instances_train: np.ndarray, gtruth_train: np.ndarray, instances_test: np.ndarray, gtruth_test: np.ndarray) -> str:
+def _summary_dataset(
+    instances_train: np.ndarray, gtruth_train: np.ndarray, instances_test: np.ndarray, gtruth_test: np.ndarray, labels_train: list, labels_test: list
+) -> str:
     """Summarizes key properties of training and testing datasets.
 
     This function takes training and testing data and labels as input, then computes and
@@ -77,6 +80,10 @@ def _summary_dataset(instances_train: np.ndarray, gtruth_train: np.ndarray, inst
         Testing data instances.
     gtruth_test : np.ndarray
         Testing data labels.
+    labels_train : list
+        total distinct train labels
+    labels_test : list
+        total distinct test labels
 
     Returns
     -------
@@ -107,6 +114,15 @@ def _summary_dataset(instances_train: np.ndarray, gtruth_train: np.ndarray, inst
             row += str(val).ljust(column_width)
         output_text.append(row)
 
+    labels_train.sort()
+    labels_test.sort()
+    # Add train and test label info
+    output_text.append("\n")
+    output_text.append("train labels count       : " + str(len(labels_train)))
+    output_text.append("train labels values      : " + str(labels_train))
+    output_text.append("test labels count        : " + str(len(labels_test)))
+    output_text.append("test labels values       : " + str(labels_test))
+
     return "\n".join(output_text)
 
 
@@ -131,10 +147,10 @@ def load_dataset(path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         - Testing data (instances_test)
         - Testing labels (gtruth_test)
     """
-    instances_train, gtruth_train = _load_data(path, "train")
-    instances_test, gtruth_test = _load_data(path, "test")
+    instances_train, gtruth_train, labels_train = _load_data(path, "train")
+    instances_test, gtruth_test, labels_test = _load_data(path, "test")
 
-    print(_summary_dataset(instances_train, gtruth_train, instances_test, gtruth_test))
+    print(_summary_dataset(instances_train, gtruth_train, instances_test, gtruth_test, labels_train, labels_test))
     return instances_train, gtruth_train, instances_test, gtruth_test
 
 
