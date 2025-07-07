@@ -231,5 +231,16 @@ class LayerDropout:
         self.dinputs = dvalues * self.binary_mask
 
 
+class LayerConv:
+    def __init__():
+        pass
+
+    def forward():
+        pass
+
+    def backward():
+        pass
+
+
 LayerTypes = Union[LayerDense, LayerDropout]
 TrainableLayerTypes = LayerDense
