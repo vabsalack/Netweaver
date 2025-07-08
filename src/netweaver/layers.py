@@ -232,14 +232,110 @@ class LayerDropout:
 
 
 class LayerConv:
-    def __init__():
-        pass
+    def __init__(
+        self,
+        input_shape: Tuple[int, int, int],
+        n_filters: int,
+        filter_size: Union[int, Tuple[int, int]],
+        stride: Union[int, Tuple[int, int]],
+        padding: Union[str, Tuple[int, int]],
+    ) -> None:
+        self.input_channels, self.input_height, self.input_width = input_shape
 
-    def forward():
-        pass
+        self.n_filters = n_filters
 
-    def backward():
-        pass
+        if isinstance(filter_size, int):
+            self.filter_height = self.filter_width = filter_size
+        else:
+            self.filter_height, self.filter_width = filter_size
+
+        if isinstance(stride, int):
+            self.stride_y = self.stride_x = stride
+        else:
+            self.stride_y, self.stride_x = stride
+
+        if isinstance(padding, str):
+            if padding == "same":  # observe - kernel with even dim outputs weird results
+                self.pad_y = (self.filter_height - 1) // 2
+                self.pad_x = (self.filter_width - 1) // 2
+            elif padding == "valid":
+                self.pad_x = self.pad_y = 0
+            else:
+                raise ValueError("padding must be 'valid', 'same', or tuple (int, int)")
+        else:
+            self.pad_y, self.pad_x = padding
+
+        rng = np.random.default_rng()
+        self.weights = 0.01 * rng.standard_normal(
+            (self.n_filters, self.input_channels, self.filter_height, self.filter_width),
+        )
+        self.biases = np.zeros((self.n_filters, 1))
+
+    def forward(
+        self,
+        inputs: np.ndarray,
+        training: bool,
+    ) -> None:
+        self.inputs = inputs
+        # batch size is number of images in a batch
+        batch_size, channels, height, width = inputs.shape
+
+        padded = np.pad(
+            inputs,  # default pad value is zero, only need to pad, 3rd & 4th dim, the images.
+            ((0, 0), (0, 0), (self.pad_y, self.pad_y), (self.pad_x, self.pad_x)),
+            mode="constant",
+        )
+
+        out_height = ((height + 2 * self.pad_y - self.filter_height) // self.stride_y) + 1
+        out_width = ((width + 2 * self.pad_x - self.filter_width) // self.stride_x) + 1
+
+        self.output = np.zeros((batch_size, self.n_filters, out_height, out_width))
+
+        for i in range(out_height):
+            for j in range(out_width):
+                h_start = i * self.stride_y
+                h_end = h_start + self.filter_height
+                w_start = j * self.stride_x
+                w_end = w_start + self.filter_width
+
+                region = padded[:, :, h_start:h_end, w_start:w_end]
+                for f in range(self.n_filters):
+                    self.output[:, f, i, j] = np.sum(region * self.weights[f, :, :, :], axis=(1, 2, 3)) + self.biases[f]
+
+    def backward(self, dvalues):
+        batch_size, channels, height, width = self.inputs.shape
+        _, _, out_height, out_width = dvalues.shape
+
+        padded_inputs = np.pad(
+            self.inputs,
+            ((0, 0), (0, 0), (self.pad_y, self.pad_y), (self.pad_x, self.pad_x)),
+            mode="constant",
+        )
+
+        dinputs_padded = np.zeros_like(padded_inputs)
+        self.dweights = np.zeros_like(self.weights)
+        self.dbiases = np.zeros_like(self.biases)
+
+        for i in range(out_height):
+            for j in range(out_width):
+                h_start = i * self.stride_y
+                h_end = h_start + self.filter_height
+                w_start = j * self.stride_x
+                w_end = w_start + self.filter_width
+
+                region = padded_inputs[:, :, h_start:h_end, w_start:w_end]
+                for f in range(self.n_filters):
+                    self.dweights[f] += np.sum(region * dvalues[:, f, i, j][:, None, None, None], axis=0)
+                    self.biases[f] += np.sum(dvalues[:, f, i, j])
+
+                for n in range(batch_size):
+                    for f in range(self.n_filters):
+                        dinputs_padded[n, :, h_start:h_end, w_start:w_end] += self.weights[f] * dvalues[n, f, i, j]
+
+                if self.pad_y == 0 and self.pad_x == 0:
+                    self.dinputs = dinputs_padded
+                else:
+                    self.dinputs = dinputs_padded[:, :, self.pad_y : -self.pad_y or None, self.pad_x : -self.pad_x or None]
 
 
 LayerTypes = Union[LayerDense, LayerDropout]
