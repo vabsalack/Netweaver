@@ -9,7 +9,7 @@ from tqdm.auto import tqdm
 from ._internal_utils import append_log_file, create_log_dir, create_log_file, get_cwd, get_datetime, join_path
 from .accuracy import AccuracyTypes
 from .activation_layers import ActivationSoftmax, ActivationTypes
-from .layers import LayerTypes, TrainableLayerTypes, _LayerInput
+from .layers import LayerFlatten, LayerTypes, TrainableLayerTypes, _LayerInput
 from .lossfunctions import LossCategoricalCrossentropy, LossTypes
 from .optimizers import OptimizerTypes
 from .softmax_cce_loss import ActivationSoftmaxLossCategoricalCrossentropy
@@ -57,6 +57,21 @@ class Model:
         None
         """
         self.layers.append(layer)
+
+        if isinstance(layer, LayerFlatten):
+            dummy_input = np.zeros(
+                (
+                    1,
+                    self.layers[0].input_channels,
+                    self.layers[0].input_height,
+                    self.layers[0].input_width,
+                )
+            )
+            for layer in self.layers:
+                layer.forward(dummy_input, training=True)
+                dummy_input = layer.output
+            n_inputs = dummy_input.shape[1]
+            print(f"The number of 'n_inputs' for the next dense layer will be {n_inputs}")
 
     def set(
         self,

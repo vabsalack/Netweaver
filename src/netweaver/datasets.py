@@ -6,6 +6,7 @@ from zipfile import ZipFile
 import numpy as np
 from PIL import Image
 from pympler import asizeof
+from tqdm.auto import tqdm
 
 from ._internal_utils import _create_directory, get_cwd, join_path
 
@@ -31,7 +32,8 @@ def _load_data(path, dataset) -> tuple[np.ndarray, np.ndarray]:
     labels = os.listdir(os.path.join(path, dataset))
     instances = []
     gtruth = []
-    for label in labels:
+    tqdm_desc_train = f"{dataset} set loading"
+    for label in tqdm(labels, desc=f"{tqdm_desc_train}", unit="labels"):
         for file in os.listdir(os.path.join(path, dataset, label)):
             image = np.array(Image.open(os.path.join(path, dataset, label, file)))
             instances.append(image)
@@ -118,10 +120,10 @@ def _summary_dataset(
     labels_test.sort()
     # Add train and test label info
     output_text.append("\n")
-    output_text.append("train labels count       : " + str(len(labels_train)))
-    output_text.append("train labels values      : " + str(labels_train))
-    output_text.append("test labels count        : " + str(len(labels_test)))
-    output_text.append("test labels values       : " + str(labels_test))
+    output_text.append(f"train labels count       : {len(labels_train)}")
+    output_text.append(f"train labels values      : {labels_train}")
+    output_text.append(f"test labels count        : {len(labels_test)}")
+    output_text.append(f"test labels values       : {labels_test}")
 
     return "\n".join(output_text)
 

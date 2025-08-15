@@ -78,8 +78,13 @@ class LayerDense:
 
     def __str__(self):
         return (
-            f"Layer_Dense(): n_inputs: {self.n_inputs}| n_neurons: {self.n_neurons}| L1_w: {self.weight_regularizer_l1}|"
-            + f" L1_b: {self.bias_regularizer_l1}| L2_w: {self.weight_regularizer_l2}| L2_b:{self.bias_regularizer_l2}"
+            f"Layer_Dense(): n_inputs: {self.n_inputs} "
+            f"| n_neurons: {self.n_neurons} "
+            f"| L1_w: {self.weight_regularizer_l1} "
+            f"| L1_b: {self.bias_regularizer_l1} "
+            f"| L2_w: {self.weight_regularizer_l2} "
+            f"| L2_b: {self.bias_regularizer_l2}"
+            f"| params: {self.count_trainable_params}"
         )
 
     def forward(self, inputs: Float64Array2D, training: bool) -> None:
@@ -240,9 +245,10 @@ class LayerConv:
     This layer applies a set of learnable filters to the input data, enabling the extraction of spatial features.
     It supports configurable filter size, stride, padding, and L1/L2 regularization for both weights and biases.
     """
+
     def __init__(
         self,
-        input_channels: int,
+        input_shape: Tuple[int, int, int],
         n_filters: int,
         filter_size: Union[int, Tuple[int, int]],
         stride: Union[int, Tuple[int, int]] = 1,
@@ -260,8 +266,8 @@ class LayerConv:
 
         Parameters
         ----------
-        input_channels : int
-            Number of input channels (e.g., 3 for RGB images).
+        input_shape : tuple of int
+            shape of the input (channels, height, width).
         n_filters : int
             Number of convolutional filters (output channels).
         filter_size : int or tuple of int
@@ -283,6 +289,7 @@ class LayerConv:
         -------
         None
         """
+        self.input_channels, self.input_height, self.input_width = input_shape
         self.n_filters = n_filters
 
         if isinstance(filter_size, int):
@@ -308,9 +315,11 @@ class LayerConv:
 
         rng = np.random.default_rng()
         self.weights = 0.01 * rng.standard_normal(
-            (self.n_filters, input_channels, self.filter_height, self.filter_width),
+            (self.n_filters, self.input_channels, self.filter_height, self.filter_width),
         )
         self.biases = np.zeros((self.n_filters, 1))
+
+        self.count_trainable_params = self.n_filters * ((self.input_channels * self.filter_height * self.filter_width) + 1)
 
         self.weight_regularizer_l1 = weight_regularizer_l1
         self.weight_regularizer_l2 = weight_regularizer_l2
@@ -492,11 +501,14 @@ class LayerConv:
         str
             A string describing the layer's configuration.
         """
-        return f"Layer_Conv2D(): kernel_count: {self.weights[0]} \
-            | kernel_channels: {self.weights[1]} \
-            | kernel_dim: ({self.weights[2]},{self.weights[3]}) \
-            | stride: ({self.stride_y},{self.stride_x}) \
-            | padding: ({self.pad_y},{self.pad_x})"
+        return (
+            f"Layer_Conv2D(): kernel_count:{self.weights.shape[0]} "
+            f"| kernel_channels:{self.weights.shape[1]} "
+            f"| kernel_dim:({self.weights.shape[2]},{self.weights.shape[3]}) "
+            f"| stride:({self.stride_y},{self.stride_x}) "
+            f"| padding:({self.pad_y},{self.pad_x})"
+            f"| params: {self.count_trainable_params}"
+        )
 
     def get_parameters(self) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -539,7 +551,7 @@ class LayerMaxPool2D:
     This layer reduces the spatial dimensions of the input by taking the maximum value over a specified window for each channel.
     It is commonly used to downsample feature maps and introduce spatial invariance.
     """
-    
+
     def __init__(self, pool_size: Union[int, Tuple[int, int]], stride: Union[int, Tuple[int, int]] = None) -> None:
         """
         Initializes the max pooling layer with the specified pool size and stride.
@@ -569,8 +581,6 @@ class LayerMaxPool2D:
             self.stride_y = self.stride_x = stride
         else:
             self.stride_y, self.stride_x = stride
-
-    
 
     def forward(self, inputs: np.ndarray, training: bool) -> None:
         """
@@ -661,6 +671,51 @@ class LayerMaxPool2D:
             A string describing the layer's configuration.
         """
         return f"Layer_MaxPool2D(): pool_size: ({self.pool_height},{self.pool_width}) | stride: ({self.stride_y},{self.stride_x})"
+
+
+class LayerFlatten:
+    """
+    Implements a flattening layer for CNN architectures.
+
+    This layer reshapes multi-dimensional input (e.g., from convolutional or pooling layers)
+    into a 2D array suitable for dense layers: (batch_size, -1).
+    """
+
+    def forward(self, inputs: np.ndarray, training: bool) -> None:
+        """
+        Flattens the input to shape (batch_size, -1).
+
+        Parameters
+        ----------
+        inputs : np.ndarray
+            Input data of shape (batch_size, channels, height, width).
+        training : bool
+            Whether the layer is in training mode (unused).
+
+        Returns
+        -------
+        None
+        """
+        self.inputs_shape = inputs.shape
+        self.output = inputs.reshape(inputs.shape[0], -1)
+
+    def backward(self, dvalues: np.ndarray) -> None:
+        """
+        Reshapes the gradient to the original input shape.
+
+        Parameters
+        ----------
+        dvalues : np.ndarray
+            Gradient of the loss with respect to the output of this layer.
+
+        Returns
+        -------
+        None
+        """
+        self.dinputs = dvalues.reshape(self.inputs_shape)
+
+    def __str__(self):
+        return "Layer_Flatten()"
 
 
 LayerTypes = Union[LayerDense, LayerDropout]
