@@ -34,8 +34,10 @@ USER ${USER_NAME}
 
 WORKDIR ${HOME_DIR}
 # download and install uv
-RUN curl -fsSL https://astral.sh/uv/install.sh -o uv-installer.sh && \
-    sh uv-installer.sh
+# RUN curl -fsSL https://astral.sh/uv/install.sh -o uv-installer.sh && \
+#     sh uv-installer.sh
+COPY uv-installer.sh uv-installer.sh
+RUN sh uv-installer.sh
 # install uv managed python
 RUN uv python install ${ARG_UV_PYTHON}
 # download and install oh-my-zsh
