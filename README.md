@@ -179,6 +179,12 @@ These features collectively make Netweaver a practical and educational tool for 
 |       `-- test_model_training.py
 `-- ruff.toml
 ```
+
+## future works
+1. implementing convolutional neural networks.
+2. appending more activation functions
+3. attempt to implement transformer layer & provide necessary functionalities to add llm.
+
 ## Contributing
 
 We welcome all contributions! Whether you have ideas for improvements, bug fixes, or new features, your input is valued.
