@@ -16,26 +16,21 @@
 ![Static SemVer](https://img.shields.io/badge/2.0.0-grey?style=plastic&logo=SemVer&logoColor=%233F4551&logoSize=auto&label=SemVer&labelColor=white&color=%23676767)
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?logo=discord&logoColor=white)](https://discord.gg/5GS8EGdr)
 
-
-
-
-
 ## Introduction
 
-**Netweaver** is a lightweight, from-scratch implementation of neural networks, built primarily with [Numpy](https://numpy.org/) for efficient and fast matrix operations. It avoids heavy dependencies and complex abstractions, making it ideal for learning, experimentation, and educational use.
+**Netweaver** is a lightweight, from-scratch implementation of neural networks, built primarily with [Numpy](https://numpy.org/) for efficient and fast matrix operations. It avoids heavy dependencies and complex abstractions; the goal is to ensure that the code you are running is generally right in front of you, making it ideal for learning, experimentation, and educational use.
 
 This project was born out of my own curiosity while exploring deep learning concepts. While popular frameworks offer powerful tools, they often come with layers of abstraction that can be difficult to modify or understand deeply. **Netweaver** aims to be different—modular, transparent, and flexible—providing a sandbox for implementing and testing your own ideas without the usual overhead.
 Whether you're a student, a curious developer, or a researcher testing new ideas, Netweaver offers a flexible playground for experimentation and understanding the internals of neural networks.
 
 The ultimate goal is to foster a collaborative space where learners and tinkerers can exchange ideas and build together. Contributions of all kinds—bug fixes, enhancements, or new features—are not only welcome but encouraged.
 
-Source code: https://github.com/vabsalack/Netweaver  
-discussions: https://github.com/vabsalack/Netweaver/discussions  
-issues: https://github.com/vabsalack/Netweaver/issues  
-community: https://discord.gg/5GS8EGdr  
+Source code: <https://github.com/vabsalack/Netweaver>  
+discussions: <https://github.com/vabsalack/Netweaver/discussions>  
+issues: <https://github.com/vabsalack/Netweaver/issues>  
+community: <https://discord.gg/5GS8EGdr>  
 
 To get started, simply [install](#installation) the library. For a hands-on introduction, I recommend downloading and running these two notebooks: [`demo_libusage.ipynb`](https://github.com/vabsalack/Netweaver/blob/main/notebooks/demonstration/demo_libusage.ipynb) and [`demo_metricmonitor.ipynb`](https://github.com/vabsalack/Netweaver/blob/main/notebooks/demonstration/demo_metricmonitor.ipynb). They'll walk you through the basics and show you how to make the most of Netweaver.
-
 
 ## Features
 
@@ -45,7 +40,6 @@ To get started, simply [install](#installation) the library. For a hands-on intr
 - Designed for learning and experimentation
 
 ## Table of Contents
-
 
 | S.No. | Contents                                |
 | ----- | --------------------------------------- |
@@ -65,14 +59,19 @@ To get started, simply [install](#installation) the library. For a hands-on intr
 You can install Netweaver using:
 
 ### Option 1: [pip](https://pypi.org/project/pip/)
+
 ```bash
 pip install netweaver
 ```
+
 ### Option 2: [uv](https://docs.astral.sh/uv/) (Recommended)
+
 ```bash
 uv add netweaver
 ```
-### Option 3: clone it locally for development and exploration.
+
+### Option 3: clone it locally for development and exploration
+
 ```bash
 git clone https://github.com/vabsalack/Netweaver.git
 cd Netweaver
@@ -80,6 +79,7 @@ pip install -e .
 ```
 
 ## Usage
+
 Here’s a minimal example of building and training a neural network with Netweaver:
 
 For detailed instructions and examples, refer to the [`demo_libusage.ipynb`](https://github.com/vabsalack/Netweaver/blob/main/notebooks/demonstration/demo_libusage.ipynb) and [`demo_metricmonitor.ipynb`](https://github.com/vabsalack/Netweaver/blob/main/notebooks/demonstration/demo_metricmonitor.ipynb) files.
@@ -89,7 +89,7 @@ For detailed instructions and examples, refer to the [`demo_libusage.ipynb`](htt
 Here are some key features that make working with Netweaver both intuitive and powerful:
 
 1. **Effortless Dataset Handling:**  
-    Netweaver offers built-in utilities to download and extract the Fashion MNIST dataset, allowing you to jump straight into building and training neural networks without manual data preparation. 
+    Netweaver offers built-in utilities to download and extract the Fashion MNIST dataset, allowing you to jump straight into building and training neural networks without manual data preparation.
     <p align="center">
     <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/store_room/images/download.png" alt="download" />
     </p>
@@ -181,6 +181,7 @@ These features collectively make Netweaver a practical and educational tool for 
 ```
 
 ## future works
+
 1. implementing convolutional neural networks.
 2. appending more activation functions
 3. attempt to implement transformer layer & provide necessary functionalities to add llm.
@@ -224,8 +225,7 @@ The dev container uses a **bind mount** volume, meaning your project files and e
 
 #### Troubleshooting
 
-If you encounter any issues while setting up or using the dev container, please open a request or discussion in the [community](https://discord.gg/5GS8EGdr) channels or Github [discussions](https://github.com/vabsalack/Netweaver/discussions). 
-
+If you encounter any issues while setting up or using the dev container, please open a request or discussion in the [community](https://discord.gg/5GS8EGdr) channels or GitHub [discussions](https://github.com/vabsalack/Netweaver/discussions).
 
 Feel free to open issues for bugs, feature requests, or questions. Let's grow a collaborative community focused on learning and innovation!
 
@@ -266,7 +266,7 @@ If you're curious about the inspiration behind Netweaver, check out the awesome 
     <tr>
         <td>
             <a href="https://github.com/vabsalack" target="_blank">Vabsalack</a>
-        </td> 
+        </td>
     </tr>
 </table>
 
@@ -276,13 +276,12 @@ If you're curious about the inspiration behind Netweaver, check out the awesome 
     <tr>
         <td>
             <a href="https://discord.gg/5GS8EGdr" target="_blank">Discord, click me</a>
-        </td> 
+        </td>
         <td>
             use text channels wisely
-        </td> 
+        </td>
     </tr>
 </table>
-
 
 ## License
 
@@ -291,5 +290,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE.txt) f
 <p align="center">
     <img src="https://raw.githubusercontent.com/vabsalack/Netweaver/refs/heads/main/branding/logo/logomark/netweaverlogoicon-transparent.png" alt="netweaver logo" width=70 />
 </p>
-
-

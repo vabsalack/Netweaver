@@ -22,7 +22,7 @@
     // EXPLORER SETTINGS
     "explorer.autoReveal": true,
     // WORKBENCH SETTINGS
-    "workbench.colorTheme": "Default Dark Modern",
+    "workbench.colorTheme": "Dark Modern",
     "workbench.editor.enablePreview": false,
     "workbench.editor.tabSizing": "shrink",
     // TERMINAL SETTINGS
