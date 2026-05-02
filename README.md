@@ -225,7 +225,7 @@ The dev container uses a **bind mount** volume, meaning your project files and e
 
 #### Troubleshooting
 
-If you encounter any issues while setting up or using the dev container, please open a request or discussion in the [community](https://discord.gg/5GS8EGdr) channels or Github [discussions](https://github.com/vabsalack/Netweaver/discussions).
+If you encounter any issues while setting up or using the dev container, please open a request or discussion in the [community](https://discord.gg/5GS8EGdr) channels or GitHub [discussions](https://github.com/vabsalack/Netweaver/discussions).
 
 Feel free to open issues for bugs, feature requests, or questions. Let's grow a collaborative community focused on learning and innovation!
 
