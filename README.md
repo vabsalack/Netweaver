@@ -18,7 +18,7 @@
 
 ## Introduction
 
-**Netweaver** is a lightweight, from-scratch implementation of neural networks, built primarily with [Numpy](https://numpy.org/) for efficient and fast matrix operations. It avoids heavy dependencies and complex abstractions; the goal is to ensure that the code you are running is generally right infront of you: making it ideal for learning, experimentation, and educational use.
+**Netweaver** is a lightweight, from-scratch implementation of neural networks, built primarily with [Numpy](https://numpy.org/) for efficient and fast matrix operations. It avoids heavy dependencies and complex abstractions; the goal is to ensure that the code you are running is generally right in front of you, making it ideal for learning, experimentation, and educational use.
 
 This project was born out of my own curiosity while exploring deep learning concepts. While popular frameworks offer powerful tools, they often come with layers of abstraction that can be difficult to modify or understand deeply. **Netweaver** aims to be different—modular, transparent, and flexible—providing a sandbox for implementing and testing your own ideas without the usual overhead.
 Whether you're a student, a curious developer, or a researcher testing new ideas, Netweaver offers a flexible playground for experimentation and understanding the internals of neural networks.
